@@ -15,7 +15,13 @@
     "@vitejs/plugin-react": "^1.0.0",
     "autoprefixer": "10.3.7",
     "postcss": "8.3.11",
+    "standard": "16.0.4",
     "tailwindcss": "2.2.17",
     "vite": "^2.6.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "./node_modules/standard/eslintrc.json"
+    ]
   }
 }
