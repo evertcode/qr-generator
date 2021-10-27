@@ -71,6 +71,7 @@ function App () {
 
     if (file.size > 1024) return
 
+    // eslint-disable-next-line no-undef
     const reader = new FileReader()
 
     if (file) {
