@@ -1,5 +1,8 @@
 import QRCodeStyling from 'qr-code-styling'
 import { useRef, useState, useEffect } from 'react'
+
+import Logo from '../assets/logo.svg'
+
 import './App.css'
 
 function App () {
@@ -127,8 +130,8 @@ function App () {
       <header className="flex justify-center items-center">
         <h1 className="font-popins text-4xl xl:text-6xl font-bold">QR Code Generator</h1>
       </header>
-      <main className="flex flex-col justify-center items-center">
-        <div className="pt-10" ref={ref} />
+      <main className="flex flex-col justify-center items-center gap-1">
+        <div className="pt-4 xl:pt-10" ref={ref} />
 
         <div className="flex flex-col pt-4 space-y-2">
           <input
@@ -136,12 +139,12 @@ function App () {
             type="text"
             className="py-3 px-4 bg-white rounded-lg placeholder-gray-400 text-gray-900 appearance-none inline-block w-full shadow-md" value={options.data} onChange={onDataChange} />
 
-          <label class="w-64 flex flex-col items-center px-4 py-6 bg-white text-green-500 rounded-lg shadow-lg tracking-wide uppercase border border-green-500 cursor-pointer hover:bg-green-500 hover:text-white">
-            <svg class="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+          <label className="w-64 flex flex-col items-center px-4 py-6 bg-white text-green-500 rounded-lg shadow-lg tracking-wide uppercase border border-green-500 cursor-pointer hover:bg-green-500 hover:text-white">
+            <svg className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
               <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
             </svg>
-            <span class="mt-2 text-base leading-normal">Select a file</span>
-            <input type='file' onChange={onChangeImage} class="hidden" />
+            <span className="mt-2 text-base leading-normal">Select a file</span>
+            <input type='file' onChange={onChangeImage} className="hidden" />
           </label>
 
           <div className="relative inline-block w-full text-gray-700">
@@ -151,42 +154,42 @@ function App () {
               <option value="jpeg">JPEG</option>
               <option value="webp">WEBP</option>
             </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" /></svg>
             </div>
           </div>
           <button className="bg-green-500 text-white text-base font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-200" onClick={onDownload}>Download</button>
         </div>
       </main>
 
-      <footer class="text-gray-600 body-font">
-        <div class="container px-5 py-8 mx-auto flex items-center sm:flex-row flex-col">
-          <a class="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">
-            <img className="w-8 h-8" src="assets/logo.svg" alt='logo' />
-            <span class="ml-3 text-xl">evertcode</span>
+      <footer className="text-gray-600 body-font">
+        <div className="container px-5 py-8 mx-auto flex items-center sm:flex-row flex-col">
+          <a className="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">
+            <img className="w-8 h-8" src={Logo} alt='logo' />
+            <span className="ml-3 text-xl">evertcode</span>
           </a>
-          <p class="text-sm text-gray-500 sm:ml-4 sm:pl-4 sm:border-l-2 sm:border-gray-200 sm:py-2 sm:mt-0 mt-4">© 2021 evertcode —
-            <a href="https://github.com/evertcode" class="text-gray-600 ml-1" rel="noopener noreferrer" target="_blank">@evertcode</a>
+          <p className="text-sm text-gray-700 sm:ml-4 sm:pl-4 sm:border-l-2 sm:border-gray-200 sm:py-2 sm:mt-0 mt-4">© 2021 evertcode —
+            <a href="https://github.com/evertcode" className="text-gray-600 ml-1" rel="noopener noreferrer" target="_blank">@evertcode</a>
           </p>
-          <span class="inline-flex sm:ml-auto sm:mt-0 mt-4 justify-center sm:justify-start">
-            <a class="text-gray-500">
-              <svg fill="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
+          <span className="inline-flex sm:ml-auto sm:mt-0 mt-4 justify-center sm:justify-start">
+            <a className="text-gray-700">
+              <svg fill="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
               </svg>
             </a>
-            <a class="ml-3 text-gray-500">
-              <svg fill="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
+            <a className="ml-3 text-gray-700">
+              <svg fill="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
               </svg>
             </a>
-            <a class="ml-3 text-gray-500">
-              <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
+            <a className="ml-3 text-gray-700">
+              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
                 <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01"></path>
               </svg>
             </a>
-            <a class="ml-3 text-gray-500">
-              <svg fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" class="w-5 h-5" viewBox="0 0 24 24">
+            <a className="ml-3 text-gray-700">
+              <svg fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0" className="w-5 h-5" viewBox="0 0 24 24">
                 <path stroke="none" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path>
                 <circle cx="4" cy="4" r="2" stroke="none"></circle>
               </svg>
