@@ -69,7 +69,7 @@ function App () {
   const onChangeImage = (event) => {
     const [file] = event.target.files
 
-    if (file.size > 1024) return
+    // if (file.size > 1024) return
 
     // eslint-disable-next-line no-undef
     const reader = new FileReader()
