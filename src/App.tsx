@@ -65,7 +65,7 @@ function App () {
     }
   })
 
-  const [imageName, setImageName] = useState<string>('Default logo')
+  const [imageName, setImageName] = useState<string>('evertcode mascot')
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
   const [qrCode] = useState<QRCodeStyling>(new QRCodeStyling(options))
   const ref = useRef<HTMLDivElement>(null)
@@ -193,14 +193,14 @@ function App () {
           </section>
 
           <div className='py-8 space-y-8 border-t border-rule lg:border-t-0 lg:border-l lg:pl-10'>
-            <Section number='01' title='Content'>
+            <Section number='01' title='Link'>
               <Input
                 id='qr-data'
-                label='URL or text'
-                placeholder='https://www.google.com/'
+                label='Link or text'
+                placeholder='https://your-site.com'
                 value={options.data}
                 onChange={onDataChange}
-                error={isDataEmpty ? 'Enter a URL or some text to generate the QR code.' : undefined}
+                error={isDataEmpty ? 'Nothing to encode yet. Paste a link or type something.' : undefined}
               />
             </Section>
 
@@ -231,22 +231,22 @@ function App () {
               </p>
             </Section>
 
-            <Section number='03' title='Colors'>
+            <Section number='03' title='Ink'>
               <ColorField
                 id='qr-dots-color'
-                label='Dots color'
+                label='Dots'
                 color={options.dotsOptions?.color ?? '#222222'}
                 onChange={onChangeDotColor}
               />
               <ColorField
                 id='qr-square-color'
-                label='Corners square color'
+                label='Eye frame'
                 color={options.cornersSquareOptions?.color ?? '#222222'}
                 onChange={onChangeSquareColor}
               />
               <ColorField
                 id='qr-corner-color'
-                label='Corners dot color'
+                label='Eye center'
                 color={options.cornersDotOptions?.color ?? '#222222'}
                 onChange={onChangeCornerColor}
               />
@@ -255,7 +255,7 @@ function App () {
             <Section number='04' title='Logo'>
               <InputFile
                 id='qr-logo'
-                label='Select an image'
+                label='Add a logo'
                 image={options.image}
                 imageName={imageName}
                 onChangeImage={onChangeImage}
@@ -263,7 +263,7 @@ function App () {
               />
             </Section>
 
-            <Section title='Download'>
+            <Section title='Save'>
               <div className='flex flex-wrap items-end justify-between gap-4'>
                 <FormatPicker
                   id='qr-extension'

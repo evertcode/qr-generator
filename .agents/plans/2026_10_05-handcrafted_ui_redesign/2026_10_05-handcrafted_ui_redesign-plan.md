@@ -17,8 +17,8 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:31:10Z"
-has_completed_all_phases: "false"
+last_implementation_at: "2026-10-05T19:33:37Z"
+has_completed_all_phases: "true"
 ---
 
 # 🏷️ Handcrafted UI redesign
@@ -146,15 +146,15 @@ Replace the stock third-party look of the color picker, logo upload and download
 
 Apply the remaining personal copy and polish the footer and page metadata.
 
-- [ ] Update the remaining UI copies listed in the public contracts table (section titles, field label, placeholder, error, color labels, logo copies).
-- [ ] Restyle `Footer` as a single ruled line: `Made by evertcode` with the mascot and a `GitHub` text link.
-- [ ] Update `index.html`: `<title>QR · evertcode</title>` and the meta description.
-- [ ] Final review in the browser at ~1280px and ~375px, including keyboard navigation and contrast.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Update the remaining UI copies listed in the public contracts table (section titles, field label, placeholder, error, color labels, logo copies).
+- [x] Restyle `Footer` as a single ruled line: `Made by evertcode` with the mascot and a `GitHub` text link. _(Top `ink` rule, aligned with the header and sheet width. The copyright year and GitHub icon were dropped as agreed in the copy table.)_
+- [x] Update `index.html`: `<title>QR · evertcode</title>` and the meta description.
+- [x] Final review in the browser at ~1280px and ~375px, including keyboard navigation and contrast. _(Tab order follows the visual order down to `GitHub`. Measured contrast of every visible text on the page: minimum 5.74:1 (`red-700` error), `muted` 6.28:1, `moss` 6.27:1. No horizontal overflow on mobile, no console errors.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ## ⏭️ Next step
 
-Implement **Phase 5: Copy and finishing details**.
+All phases are completed. The UI now has its own printed-label identity and voice.
 
-Inks mixed by hand by 🐢 💨 🖋️ ✂️ 📏 🎨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Label printed, cut and stuck on the wall by 🐢 💨 🖋️ ✂️ 📏 🎨 🏷️ (Turbotuga™, [Codely](https://codely.com)’s mascot)
