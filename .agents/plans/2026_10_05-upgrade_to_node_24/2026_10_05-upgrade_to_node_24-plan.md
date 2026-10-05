@@ -9,6 +9,16 @@ created_by:
     name: "Claude Opus"
     version: "5.5"
     reasoning_effort: "low"
+
+implemented_by:
+  tool: "Claude Code"
+  model:
+    name: "Claude Opus"
+    version: "5.5"
+    reasoning_effort: "low"
+
+last_implementation_at: "2026-10-05T18:50:48Z"
+has_completed_all_phases: "false"
 ---
 
 # 🟢 Upgrade to Node 24
@@ -43,24 +53,24 @@ Make the QR generator build and run on Node 24 by pinning the Node version and u
 
 Pin the Node version and upgrade Vite so `npm run dev` and `npm run build` work again on Node 24. This is the minimum change that unblocks local development and Vercel deploys.
 
-- [ ] Add `.nvmrc` with `24`.
-- [ ] Add `"engines": { "node": ">=24" }` to `package.json`.
-- [ ] Check the latest major versions with `npm view vite version` and `npm view @vitejs/plugin-react version` and confirm their Node engine range includes 24.
-- [ ] Upgrade `vite` and `@vitejs/plugin-react` to those versions.
-- [ ] Adapt `vite.config.js` to the new Vite config API if needed.
-- [ ] Add a `src/vite-env.d.ts` with `/// <reference types="vite/client" />`.
-- [ ] If the new Vite type definitions do not compile with TypeScript 4.4, move the TypeScript upgrade from Phase 2 into this phase.
-- [ ] Regenerate `package-lock.json` with Node 24.
-- [ ] Run `npm run dev` and `npm run build` on Node 24 and check the app in the browser (QR preview, color pickers, logo upload, download).
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add `.nvmrc` with `24`.
+- [x] Add `"engines": { "node": ">=24" }` to `package.json`.
+- [x] Check the latest major versions with `npm view vite version` and `npm view @vitejs/plugin-react version` and confirm their Node engine range includes 24. _(`vite@8.3.2` and `@vitejs/plugin-react@6.1.2`, both `^20.19.0 || >=22.12.0`.)_
+- [x] Upgrade `vite` and `@vitejs/plugin-react` to those versions. _(The old `@vitejs/plugin-react@1.0.7` had to be uninstalled first: its `@babel/core@7.15.8` conflicted with the new plugin peers. Vite 8 also requires `@types/node >=20.19`, so `@types/node` was upgraded to `24.19.1` here instead of in Phase 2.)_
+- [x] Adapt `vite.config.js` to the new Vite config API if needed. _(Renamed to `vite.config.mjs`: Vite 8 warned about ESM syntax in a file loaded as CommonJS. `"type": "module"` was not used because `postcss.config.js` and `tailwind.config.js` use `module.exports`.)_
+- [x] Add a `src/vite-env.d.ts` with `/// <reference types="vite/client" />`.
+- [x] If the new Vite type definitions do not compile with TypeScript 4.4, move the TypeScript upgrade from Phase 2 into this phase. _(Needed: TS 4.4 could not parse `@types/node@24`. Upgraded to `typescript@5.9.3`.)_
+- [x] Regenerate `package-lock.json` with Node 24.
+- [x] Run `npm run dev` and `npm run build` on Node 24 and check the app in the browser (QR preview, color pickers, logo upload, download). _(Checked with `npm run dev`: one QR canvas, size change, color picker + `Escape`, remove logo, PNG download, no console errors.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 2: Upgrade TypeScript and type packages
 
 Move to TypeScript 5 with modern compiler options and clean up the dependency groups.
 
-- [ ] Upgrade `typescript` to the latest 5.x.
-- [ ] Upgrade `@types/node` to 24.x and `@types/react`, `@types/react-dom` to their latest 17.x.
+- [x] Upgrade `typescript` to the latest 5.x. _(Done in Phase 1.)_
+- [ ] Upgrade `@types/react`, `@types/react-dom` to their latest 17.x. _(`@types/node@24.19.1` already done in Phase 1.)_
 - [ ] Move `typescript` and every `@types/*` package from `dependencies` to `devDependencies`.
 - [ ] Remove `@types/jest` (there are no tests).
 - [ ] Update `tsconfig.json`: `target: "ES2020"`, `moduleResolution: "bundler"`, add `"types": ["vite/client"]` if not already covered by `src/vite-env.d.ts`.
@@ -104,6 +114,6 @@ Upgrade React to v18 and switch to the `createRoot` API.
 
 ## ⏭️ Next step
 
-Implement **Phase 1: Pin Node 24 and upgrade Vite**.
+Implement **Phase 2: Upgrade TypeScript and type packages**.
 
-Toolchain revived on Node 24 by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Vite engine swapped mid-race by 🐢 💨 🏎️ (Turbotuga™, [Codely](https://codely.com)’s mascot)
