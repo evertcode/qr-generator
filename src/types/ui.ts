@@ -1,10 +1,11 @@
 import { ChangeEvent, ReactNode } from 'react'
-import { FileExtension } from 'qr-code-styling'
+import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
 export type NumberChangeHandler = (value: number) => void
 export type ColorChangeHandler = (color: string) => void
+export type ErrorCorrectionLevelChangeHandler = (level: ErrorCorrectionLevel) => void
 
 export interface InputProps {
   id: string
@@ -46,6 +47,14 @@ export interface FormatPickerProps {
   label: string
   fileExtension: FileExtension
   onExtensionChange: ExtensionChangeHandler
+}
+
+export interface ErrorCorrectionPickerProps {
+  id: string
+  label: string
+  level: ErrorCorrectionLevel
+  onLevelChange: ErrorCorrectionLevelChangeHandler
+  hint?: string
 }
 
 export interface SectionProps {

@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:54:48Z"
+last_implementation_at: "2026-10-05T20:32:25Z"
 has_completed_all_phases: "false"
 ---
 
@@ -63,7 +63,7 @@ Make the QR generator robust and maintainable: validate user input (logo file an
 ### Components and props
 
 - `InputFileProps`: add `error?: string`.
-- New `ErrorCorrectionPicker` component with `ErrorCorrectionPickerProps { id: string; label: string; level: ErrorCorrectionLevel; onLevelChange: ErrorCorrectionLevelChangeHandler }`.
+- New `ErrorCorrectionPicker` component with `ErrorCorrectionPickerProps { id: string; label: string; level: ErrorCorrectionLevel; onLevelChange: ErrorCorrectionLevelChangeHandler; hint?: string }`.
 - `ColorFieldProps`: add `hint?: string`, linked with `aria-describedby`.
 
 ### Test suites
@@ -89,6 +89,7 @@ Make the QR generator robust and maintainable: validate user input (logo file an
   - replaces the logo with a valid upload (Phase 3)
   - selects `Q` as the default error correction level (Phase 4)
   - shows the capacity error and disables download when the text exceeds the selected level capacity (Phase 4)
+  - never sends text over the capacity to the QR renderer (Phase 4)
   - shows the logo hint when a logo is set and the level is `L` or `M` (Phase 4)
   - announces the copy result in the live region (Phase 5)
 - `tests/utils/validateLogoFile.test.ts`
@@ -165,14 +166,14 @@ Reject unsupported or oversized logo files and show readable, accessible errors 
 
 Let users choose the error correction level and stop them from generating a QR that does not fit the text.
 
-- [ ] Create `src/utils/qrCapacity.ts` with `getQrByteCapacity` and `exceedsQrCapacity`.
-- [ ] Create the `ErrorCorrectionPicker` component following the [`FormatPicker`](../../../src/components/FormatPicker.tsx) radio group pattern, with `ErrorCorrectionPickerProps` and `ErrorCorrectionLevelChangeHandler` in [`src/types/ui.ts`](../../../src/types/ui.ts).
-- [ ] Wire it in `App` to `qrOptions.errorCorrectionLevel`, keeping `Q` as the default.
-- [ ] Show the capacity error on the text field and disable the download button when the text exceeds the capacity.
-- [ ] Show the logo hint when a logo is set and the level is `L` or `M`.
-- [ ] Create `tests/utils/qrCapacity.test.ts` and add the Phase 4 cases to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/utils/qrCapacity.ts` with `getQrByteCapacity` and `exceedsQrCapacity`.
+- [x] Create the `ErrorCorrectionPicker` component following the [`FormatPicker`](../../../src/components/FormatPicker.tsx) radio group pattern, with `ErrorCorrectionPickerProps` and `ErrorCorrectionLevelChangeHandler` in [`src/types/ui.ts`](../../../src/types/ui.ts). _(Added an optional `hint?: string` prop, rendered under the options and linked to the fieldset with `aria-describedby`, to show the logo hint.)_
+- [x] Wire it in `App` to `qrOptions.errorCorrectionLevel`, keeping `Q` as the default. _(Placed in the Logo section, below the logo picker, since the logo is the main reason to change the level.)_
+- [x] Show the capacity error on the text field and disable the download button when the text exceeds the capacity. _(Found while implementing: `qr-code-styling` throws `code length overflow` inside the update effect and React unmounts the whole app. `useQrCode` now skips updates with data over capacity and keeps the last valid drawing. Checked in the browser at the exact limit and one byte over for L, M, Q and H: no library errors, message shown, app stays alive.)_
+- [x] Show the logo hint when a logo is set and the level is `L` or `M`.
+- [x] Create `tests/utils/qrCapacity.test.ts` and add the Phase 4 cases to `tests/App.test.tsx`. _(Extra case "never sends text over the capacity to the QR renderer", confirmed to fail when the guard is removed. 44 tests pass.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 5: Copy to clipboard
 
@@ -218,6 +219,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 4 to add the error correction selector and the text capacity check.
+Implement Phase 5 to copy the QR image to the clipboard.
 
 Quality shipped one tested slice at a time by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).

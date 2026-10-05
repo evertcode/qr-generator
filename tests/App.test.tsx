@@ -4,11 +4,13 @@ import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
 
+const qrDouble = vi.hoisted(() => ({ update: vi.fn() }))
+
 // jsdom has no canvas, so the QR library is replaced with a no-op double
 vi.mock('qr-code-styling', () => ({
   default: class {
     append = vi.fn()
-    update = vi.fn()
+    update = qrDouble.update
     download = vi.fn()
   }
 }))
@@ -30,7 +32,10 @@ class FailingFileReader {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  qrDouble.update.mockClear()
 })
+
+const TOO_LONG_FOR_Q = 'x'.repeat(1664)
 
 describe('App', () => {
   it('renders with the default text and logo', () => {
@@ -100,5 +105,60 @@ describe('App', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't read that file. Try another one.")
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
+  })
+
+  it('selects Q as the default error correction level', () => {
+    render(<App />)
+
+    expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
+  })
+
+  it('shows the capacity error and disables download when the text exceeds the selected level capacity', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByLabelText('Link or text')
+    await user.clear(field)
+    await user.click(field)
+    await user.paste(TOO_LONG_FOR_Q)
+
+    expect(screen.getByText('Too long for a QR code at level Q. Shorten it or pick a lower level.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /save as/i })).toBeDisabled()
+
+    await user.click(screen.getByRole('radio', { name: 'M' }))
+
+    expect(screen.queryByText(/too long for a qr code/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /save as/i })).toBeEnabled()
+  })
+
+  it('never sends text over the capacity to the QR renderer', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByLabelText('Link or text')
+    await user.clear(field)
+    await user.click(field)
+    await user.paste(TOO_LONG_FOR_Q)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    const renderedData = qrDouble.update.mock.calls.map(([options]) => options.data)
+    expect(renderedData).not.toContain(TOO_LONG_FOR_Q)
+  })
+
+  it('shows the logo hint when a logo is set and the level is L or M', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const hint = 'Logos cover part of the code. Use Q or H so it still scans.'
+
+    expect(screen.queryByText(hint)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: 'L' }))
+    expect(screen.getByText(hint)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: 'M' }))
+    expect(screen.getByRole('group', { name: 'Error correction' })).toHaveAccessibleDescription(hint)
+
+    await user.click(screen.getByRole('button', { name: 'remove' }))
+    expect(screen.queryByText(hint)).not.toBeInTheDocument()
   })
 })

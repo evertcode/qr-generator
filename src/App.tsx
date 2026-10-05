@@ -17,6 +17,7 @@ import SizeField from './components/SizeField'
 import ColorField from './components/ColorField'
 import InputFile from './components/InputFile'
 import FormatPicker from './components/FormatPicker'
+import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
 import Section from './components/Section'
 import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
@@ -25,6 +26,7 @@ import { useQrCode } from './hooks/useQrCode'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { focusRing } from './styles/focusRing'
 import { validateLogoFile } from './utils/validateLogoFile'
+import { exceedsQrCapacity } from './utils/qrCapacity'
 import { LogoUploadError, QrColorTarget, QrSizeDimension } from './types/qr'
 import defaultLogo from '../assets/logo.svg'
 
@@ -39,6 +41,13 @@ const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
   'too-large': 'That image is over 1 MB. Try a smaller one.',
   unreadable: "We couldn't read that file. Try another one."
 }
+
+const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
+const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
+const LOW_CORRECTION_LEVELS: readonly ErrorCorrectionLevel[] = ['L', 'M']
+
+const capacityMessage = (level: ErrorCorrectionLevel) =>
+  `Too long for a QR code at level ${level}. Shorten it or pick a lower level.`
 
 function App () {
   const [options, setOptions] = useState<Options>({
@@ -82,7 +91,15 @@ function App () {
   const debouncedOptions = useDebouncedValue(options, QR_UPDATE_DELAY_MS)
   const { containerRef, qrCode } = useQrCode(debouncedOptions)
 
-  const isDataEmpty = !options.data?.trim()
+  const data = options.data ?? ''
+  const errorCorrectionLevel = options.qrOptions?.errorCorrectionLevel ?? 'Q'
+  const isDataEmpty = !data.trim()
+  const isDataTooLong = exceedsQrCapacity(data, errorCorrectionLevel)
+  const canSave = !isDataEmpty && !isDataTooLong
+  const dataError = isDataEmpty
+    ? EMPTY_DATA_MESSAGE
+    : isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
+  const showLogoHint = Boolean(options.image) && LOW_CORRECTION_LEVELS.includes(errorCorrectionLevel)
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
     setOptions((opts) => ({
@@ -95,6 +112,16 @@ function App () {
     setOptions((opts) => ({
       ...opts,
       [dimension]: value
+    }))
+  }
+
+  const onErrorCorrectionLevelChange = (level: ErrorCorrectionLevel) => {
+    setOptions((opts) => ({
+      ...opts,
+      qrOptions: {
+        ...opts.qrOptions,
+        errorCorrectionLevel: level
+      }
     }))
   }
 
@@ -143,7 +170,7 @@ function App () {
   }
 
   const onDownload = () => {
-    if (isDataEmpty) return
+    if (!canSave) return
     // Flush pending edits so a quick click never saves a stale code
     qrCode.update(options)
     qrCode.download({
@@ -171,7 +198,7 @@ function App () {
             aria-label='QR code preview'
             className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
-            <QrLabel content={options.data ?? ''} width={options.width ?? 300} height={options.height ?? 300}>
+            <QrLabel content={data} width={options.width ?? 300} height={options.height ?? 300}>
               <div className='qr-preview' ref={containerRef} />
             </QrLabel>
           </section>
@@ -184,7 +211,7 @@ function App () {
                 placeholder='https://your-site.com'
                 value={options.data}
                 onChange={onDataChange}
-                error={isDataEmpty ? 'Nothing to encode yet. Paste a link or type something.' : undefined}
+                error={dataError}
               />
             </Section>
 
@@ -246,6 +273,13 @@ function App () {
                 onRemoveImage={onRemoveImage}
                 error={logoError && LOGO_ERROR_MESSAGES[logoError]}
               />
+              <ErrorCorrectionPicker
+                id='qr-error-correction'
+                label='Error correction'
+                level={errorCorrectionLevel}
+                onLevelChange={onErrorCorrectionLevelChange}
+                hint={showLogoHint ? LOGO_SCAN_HINT : undefined}
+              />
             </Section>
 
             <Section title='Save'>
@@ -260,7 +294,7 @@ function App () {
                   type='button'
                   className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
                   onClick={onDownload}
-                  disabled={isDataEmpty}
+                  disabled={!canSave}
                 >
                   Save as {fileExtension.toUpperCase()}
                   <span aria-hidden='true'>↓</span>
