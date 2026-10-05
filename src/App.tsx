@@ -25,6 +25,9 @@ import { focusRing } from './styles/focusRing'
 
 import './App.css'
 
+const SIZE_MIN = 100
+const SIZE_MAX = 1000
+
 function App () {
   const [options, setOptions] = useState<Options>({
     width: 300,
@@ -202,24 +205,30 @@ function App () {
             </Section>
 
             <Section number='02' title='Size'>
-              <div className='grid grid-cols-2 gap-4'>
+              <div className='grid grid-cols-2 gap-6'>
                 <SizeField
                   id='qr-width'
-                  label='Width (px)'
+                  label='Width'
                   value={options.width ?? 300}
-                  min={100}
-                  max={1000}
+                  min={SIZE_MIN}
+                  max={SIZE_MAX}
                   onChange={onChangeWidth}
                 />
                 <SizeField
                   id='qr-height'
-                  label='Height (px)'
+                  label='Height'
                   value={options.height ?? 300}
-                  min={100}
-                  max={1000}
+                  min={SIZE_MIN}
+                  max={SIZE_MAX}
                   onChange={onChangeHeight}
                 />
               </div>
+              <p className='flex justify-between font-mono text-xs text-muted'>
+                <span>{SIZE_MIN}–{SIZE_MAX} px each side</span>
+                <output htmlFor='qr-width qr-height' className='text-ink'>
+                  {options.width ?? 300} × {options.height ?? 300} px
+                </output>
+              </p>
             </Section>
 
             <Section number='03' title='Colors'>

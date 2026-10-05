@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:22:36Z"
+last_implementation_at: "2026-10-05T19:26:38Z"
 has_completed_all_phases: "false"
 ---
 
@@ -122,12 +122,12 @@ Replace the two twin cards with a single sheet split by thin rules, and present 
 
 Restyle the text and size fields as flat, ruled form fields with mono values.
 
-- [ ] Restyle `Input`: no shadow, bottom `rule` line that turns `moss` on focus, mono value text, error in red with sufficient contrast on `paper`.
-- [ ] Restyle `SizeField`: same field style, `px` suffix inside the field, labels `Width` / `Height`, and a combined `300 × 300 px` readout.
-- [ ] Style the range slider in `src/App.css` (thin `ink` track, square `moss` thumb) for WebKit and Firefox, keeping a visible focus state.
-- [ ] Review the fields in the browser (typing, invalid values, slider, keyboard focus).
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Restyle `Input`: no shadow, bottom `rule` line that turns `moss` on focus, mono value text, error in red with sufficient contrast on `paper`. _(The bottom line uses `muted` (6.3:1) instead of `rule` (1.31:1) to meet the 3:1 non-text contrast for control boundaries. Error uses `red-700` (5.7:1) and keeps the red line while focused. Shared classes in `src/styles/field.ts`.)_
+- [x] Restyle `SizeField`: same field style, `px` suffix inside the field, labels `Width` / `Height`, and a combined `300 × 300 px` readout. _(Readout row: `100–1000 px each side` on the left, `W × H px` on the right. Native number spinners hidden.)_
+- [x] Style the range slider in `src/App.css` (thin `ink` track, square `moss` thumb) for WebKit and Firefox, keeping a visible focus state. _(2px `moss` outline on `:focus-visible`.)_
+- [x] Review the fields in the browser (typing, invalid values, slider, keyboard focus). _(Valid value updates the QR, empty and out-of-range values are ignored and restored on blur, arrow keys move the slider in 10px steps.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 4: Color, logo and save
 
@@ -155,6 +155,6 @@ Apply the remaining personal copy and polish the footer and page metadata.
 
 ## ⏭️ Next step
 
-Implement **Phase 3: Fields and size**.
+Implement **Phase 4: Color, logo and save**.
 
-Cut along the dotted line by 🐢 💨 🖋️ ✂️ (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Fields ruled by hand by 🐢 💨 🖋️ ✂️ 📏 (Turbotuga™, [Codely](https://codely.com)’s mascot)

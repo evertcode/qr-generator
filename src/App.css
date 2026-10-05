@@ -12,6 +12,45 @@ body {
   height: auto;
 }
 
+.qr-number::-webkit-outer-spin-button,
+.qr-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qr-number {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .qr-range {
-  accent-color: #10b981;
+  @apply w-full h-4 bg-transparent cursor-pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-range::-webkit-slider-runnable-track {
+  @apply h-0.5 bg-ink;
+}
+
+.qr-range::-moz-range-track {
+  @apply h-0.5 bg-ink;
+}
+
+.qr-range::-webkit-slider-thumb {
+  @apply w-3.5 h-3.5 -mt-1.5 bg-moss border-2 border-paper;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-range::-moz-range-thumb {
+  @apply w-3.5 h-3.5 bg-moss border-2 border-paper rounded-none;
+}
+
+.qr-range:focus {
+  outline: none;
+}
+
+.qr-range:focus-visible {
+  @apply outline outline-2 outline-offset-4 outline-moss;
 }

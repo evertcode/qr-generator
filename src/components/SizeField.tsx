@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { SizeFieldProps } from '../types/ui'
-import { focusRing } from '../styles/focusRing'
+import { fieldBase, fieldLabel, fieldValid } from '../styles/field'
 
 function SizeField ({ id, label, value, min, max, onChange }: SizeFieldProps) {
   const [draft, setDraft] = useState<string>(String(value))
@@ -28,32 +28,36 @@ function SizeField ({ id, label, value, min, max, onChange }: SizeFieldProps) {
   }
 
   return (
-    <div className='flex flex-col space-y-1'>
-      <label htmlFor={id} className='text-sm font-medium text-gray-700'>
+    <div className='flex flex-col gap-1'>
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
-      <input
-        id={id}
-        type='number'
-        inputMode='numeric'
-        min={min}
-        max={max}
-        className={`py-3 px-4 bg-white rounded-lg border border-gray-200 placeholder-gray-400 text-gray-900 w-full shadow-sm ${focusRing}`}
-        value={draft}
-        onChange={onDraftChange}
-        onBlur={onDraftBlur}
-      />
+      <div className='relative'>
+        <input
+          id={id}
+          type='number'
+          inputMode='numeric'
+          min={min}
+          max={max}
+          className={`qr-number ${fieldBase} ${fieldValid} pr-8`}
+          value={draft}
+          onChange={onDraftChange}
+          onBlur={onDraftBlur}
+        />
+        <span aria-hidden='true' className='absolute right-0 bottom-2 font-mono text-sm text-muted'>
+          px
+        </span>
+      </div>
       <input
         type='range'
         aria-label={`${label} slider`}
         min={min}
         max={max}
         step={10}
-        className={`qr-range w-full cursor-pointer rounded ${focusRing}`}
+        className='qr-range mt-2'
         value={value}
         onChange={onRangeChange}
       />
-      <span className='text-xs text-gray-500'>{min}–{max} px</span>
     </div>
   )
 }
