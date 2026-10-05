@@ -1,21 +1,51 @@
-interface Props {
-  onChangeImage: any
-}
+import { useRef } from 'react'
+import { InputFileProps } from '../types/ui'
+import { focusRing } from '../styles/focusRing'
 
-function InputFile({ onChangeImage }: Props) {
+const textAction = `rounded-sm text-sm font-medium underline underline-offset-4 decoration-1 hover:decoration-2 ${focusRing}`
+
+function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage }: InputFileProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const onOpenFileDialog = () => {
+    inputRef.current?.click()
+  }
+
   return (
-    <label className='w-64 flex flex-col items-center px-4 py-6 bg-white text-green-500 rounded-lg shadow-lg tracking-wide uppercase border border-green-500 cursor-pointer hover:bg-green-500 hover:text-white'>
-      <svg
-        className='w-8 h-8'
-        fill='currentColor'
-        xmlns='http://www.w3.org/2000/svg'
-        viewBox='0 0 20 20'
-      >
-        <path d='M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z' />
-      </svg>
-      <span className='mt-2 text-base leading-normal'>Select a file</span>
-      <input type='file' onChange={onChangeImage} className='hidden' />
-    </label>
+    <div>
+      {image
+        ? (
+          <div className='flex items-center gap-3 py-2 border-b border-rule'>
+            <img src={image} alt='' className='w-10 h-10 p-1 object-contain bg-white border border-rule' />
+            <span className='flex-1 min-w-0 truncate font-mono text-sm' title={imageName}>
+              {imageName}
+            </span>
+            <button type='button' onClick={onOpenFileDialog} className={`${textAction} text-moss`}>
+              change
+            </button>
+            <span aria-hidden='true' className='text-muted'>·</span>
+            <button type='button' onClick={onRemoveImage} className={`${textAction} text-red-700`}>
+              remove
+            </button>
+          </div>
+          )
+        : (
+          <button type='button' onClick={onOpenFileDialog} className={`${textAction} inline-flex items-center gap-2 text-moss`}>
+            <span aria-hidden='true' className='font-mono no-underline'>+</span>
+            {label}
+          </button>
+          )}
+      <input
+        id={id}
+        ref={inputRef}
+        type='file'
+        accept='image/*'
+        onChange={onChangeImage}
+        className='hidden'
+        tabIndex={-1}
+        aria-hidden='true'
+      />
+    </div>
   )
 }
 

@@ -3,6 +3,80 @@
 @tailwind utilities;
 
 body {
-  background-color: #8ec5fc;
-  background-image: linear-gradient(62deg, #8ec5fc 0%, #e0c3fc 100%);
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+.qr-preview canvas,
+.qr-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-number::-webkit-outer-spin-button,
+.qr-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qr-number {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.qr-range {
+  @apply w-full h-4 bg-transparent cursor-pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-range::-webkit-slider-runnable-track {
+  @apply h-0.5 bg-ink;
+}
+
+.qr-range::-moz-range-track {
+  @apply h-0.5 bg-ink;
+}
+
+.qr-range::-webkit-slider-thumb {
+  @apply w-3.5 h-3.5 -mt-1.5 bg-moss border-2 border-paper;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-range::-moz-range-thumb {
+  @apply w-3.5 h-3.5 bg-moss border-2 border-paper rounded-none;
+}
+
+.qr-range:focus {
+  outline: none;
+}
+
+.qr-range:focus-visible {
+  @apply outline outline-2 outline-offset-4 outline-moss;
+}
+
+.qr-swatch {
+  @apply w-8 h-8 p-0 bg-transparent border border-ink cursor-pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.qr-swatch::-webkit-color-swatch {
+  border: none;
+}
+
+.qr-swatch::-moz-color-swatch {
+  border: none;
+}
+
+.qr-swatch:focus {
+  outline: none;
+}
+
+.qr-swatch:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-moss;
 }

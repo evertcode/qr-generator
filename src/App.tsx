@@ -11,17 +11,24 @@ import QRCodeStyling, {
   FileExtension
 } from 'qr-code-styling'
 
-import { ColorResult, SketchPicker } from 'react-color'
-
 import Header from './components/Header'
 import Input from './components/Input'
+import SizeField from './components/SizeField'
+import ColorField from './components/ColorField'
 import InputFile from './components/InputFile'
-import SelectExtension from './components/SelectExtension'
+import FormatPicker from './components/FormatPicker'
+import Section from './components/Section'
+import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
+
+import { focusRing } from './styles/focusRing'
 
 import './App.css'
 
-function App() {
+const SIZE_MIN = 100
+const SIZE_MAX = 1000
+
+function App () {
   const [options, setOptions] = useState<Options>({
     width: 300,
     height: 300,
@@ -58,9 +65,7 @@ function App() {
     }
   })
 
-  const [showDotPicker, setShowDotPicker] = useState<boolean>(false)
-  const [showSquarePicker, setShowSquarePicker] = useState<boolean>(false)
-  const [showCornerPicker, setShowCornerPicker] = useState<boolean>(false)
+  const [imageName, setImageName] = useState<string>('evertcode mascot')
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
   const [qrCode] = useState<QRCodeStyling>(new QRCodeStyling(options))
   const ref = useRef<HTMLDivElement>(null)
@@ -72,8 +77,9 @@ function App() {
   useEffect(() => {
     if (!qrCode) return
     qrCode.update(options)
-    console.log(options)
   }, [qrCode, options])
+
+  const isDataEmpty = !options.data?.trim()
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
     setOptions((opts) => ({
@@ -82,33 +88,33 @@ function App() {
     }))
   }
 
-  const onChangeWidth = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeWidth = (width: number) => {
     setOptions((opts) => ({
       ...opts,
-      width: Number(event.target.value)
+      width
     }))
   }
 
-  const onChangeHeight = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeHeight = (height: number) => {
     setOptions((opts) => ({
       ...opts,
-      height: Number(event.target.value)
+      height
     }))
   }
 
-  const onExtensionChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setFileExtension(event.target.value as FileExtension)
+  const onExtensionChange = (extension: FileExtension) => {
+    setFileExtension(extension)
   }
 
   const onChangeImage = (event: ChangeEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement
     const file = target.files?.item(0)
 
-    // eslint-disable-next-line no-undef
     const reader = new FileReader()
 
     if (file) {
       reader.readAsDataURL(file)
+      setImageName(file.name)
 
       reader.onload = () => {
         setOptions((opts) => ({
@@ -123,143 +129,165 @@ function App() {
           image: ''
         }))
       }
-    } else {
-      setOptions((opts) => ({
-        ...opts,
-        image: ''
-      }))
     }
+
+    target.value = ''
+  }
+
+  const onRemoveImage = () => {
+    setOptions((opts) => ({
+      ...opts,
+      image: ''
+    }))
   }
 
   const onDownload = () => {
-    if (!qrCode) return
+    if (!qrCode || isDataEmpty) return
     qrCode.download({
       extension: fileExtension
     })
   }
 
-  const onChangeDotColor = (col: ColorResult, event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeDotColor = (color: string) => {
     setOptions((opts) => ({
       ...opts,
       dotsOptions: {
         ...opts.dotsOptions,
-        color: col.hex
+        color
       }
     }))
   }
 
-  const onChangeSquareColor = (col: ColorResult, event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeSquareColor = (color: string) => {
     setOptions((opts) => ({
       ...opts,
       cornersSquareOptions: {
         ...opts.cornersSquareOptions,
-        color: col.hex
+        color
       }
     }))
   }
 
-  const onChangeCornerColor = (col: ColorResult, event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeCornerColor = (color: string) => {
     setOptions((opts) => ({
       ...opts,
       cornersDotOptions: {
         ...opts.cornersDotOptions,
-        color: col.hex
+        color
       }
     }))
   }
 
-  const onShowDotPicker = () => {
-    setShowDotPicker(oldValue => !oldValue)
-  }
-
-  const onShowSquarePicker = () => {
-    setShowSquarePicker(oldValue => !oldValue)
-  }
-
-  const onShowCornerPicker = () => {
-    setShowCornerPicker(oldValue => !oldValue)
-  }
-
   return (
-    <>
+    <div className='min-h-screen flex flex-col'>
       <Header />
-      <main className='flex flex-col justify-center items-center gap-1'>
-        <div className='pt-4 xl:pt-10' ref={ref} />
-
-        <div className='flex flex-col pt-4 space-y-2'>
-          <Input
-            placeholder={'https://www.google.com/'}
-            value={options.data}
-            onChange={onDataChange}
-          />
-
-          <Input
-            placeholder={'300'}
-            value={options.width}
-            onChange={onChangeWidth}
-          />
-
-          <Input
-            placeholder={'300'}
-            value={options.height}
-            onChange={onChangeHeight}
-          />
-
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Dots color:</label>
-            <div onClick={onShowDotPicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.dotsOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
-            </div>
-            {showDotPicker && (<div className='absolute z-10'>
-              <div onClick={onShowDotPicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.dotsOptions?.color} onChange={onChangeDotColor} />
-            </div>)}
-          </div>
-
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Corners Square Color:</label>
-            <div onClick={onShowSquarePicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.cornersSquareOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
-            </div>
-            {showSquarePicker && (<div className='absolute z-10'>
-              <div onClick={onShowSquarePicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.cornersSquareOptions?.color} onChange={onChangeSquareColor} />
-            </div>)}
-          </div>
-
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Corners Dot Color:</label>
-            <div onClick={onShowCornerPicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.cornersDotOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
-            </div>
-            {showCornerPicker && (<div className='absolute z-10'>
-              <div onClick={onShowCornerPicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.cornersDotOptions?.color} onChange={onChangeCornerColor} />
-            </div>)}
-          </div>
-
-          <InputFile onChangeImage={onChangeImage} />
-
-          <div className='relative inline-block w-full text-gray-700'>
-            <SelectExtension fileExtension={fileExtension} onExtensionChange={onExtensionChange} />
-          </div>
-          <button
-            className='bg-green-500 text-white text-base font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-200'
-            onClick={onDownload}
+      <main className='flex-1 w-full max-w-6xl mx-auto px-4 py-8 lg:py-12'>
+        <div className='grid border-t border-ink lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start'>
+          <section
+            aria-label='QR code preview'
+            className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
-            Download
-          </button>
+            <QrLabel content={options.data ?? ''} width={options.width ?? 300} height={options.height ?? 300}>
+              <div className='qr-preview' ref={ref} />
+            </QrLabel>
+          </section>
+
+          <div className='py-8 space-y-8 border-t border-rule lg:border-t-0 lg:border-l lg:pl-10'>
+            <Section number='01' title='Link'>
+              <Input
+                id='qr-data'
+                label='Link or text'
+                placeholder='https://your-site.com'
+                value={options.data}
+                onChange={onDataChange}
+                error={isDataEmpty ? 'Nothing to encode yet. Paste a link or type something.' : undefined}
+              />
+            </Section>
+
+            <Section number='02' title='Size'>
+              <div className='grid grid-cols-2 gap-6'>
+                <SizeField
+                  id='qr-width'
+                  label='Width'
+                  value={options.width ?? 300}
+                  min={SIZE_MIN}
+                  max={SIZE_MAX}
+                  onChange={onChangeWidth}
+                />
+                <SizeField
+                  id='qr-height'
+                  label='Height'
+                  value={options.height ?? 300}
+                  min={SIZE_MIN}
+                  max={SIZE_MAX}
+                  onChange={onChangeHeight}
+                />
+              </div>
+              <p className='flex justify-between font-mono text-xs text-muted'>
+                <span>{SIZE_MIN}–{SIZE_MAX} px each side</span>
+                <output htmlFor='qr-width qr-height' className='text-ink'>
+                  {options.width ?? 300} × {options.height ?? 300} px
+                </output>
+              </p>
+            </Section>
+
+            <Section number='03' title='Ink'>
+              <ColorField
+                id='qr-dots-color'
+                label='Dots'
+                color={options.dotsOptions?.color ?? '#222222'}
+                onChange={onChangeDotColor}
+              />
+              <ColorField
+                id='qr-square-color'
+                label='Eye frame'
+                color={options.cornersSquareOptions?.color ?? '#222222'}
+                onChange={onChangeSquareColor}
+              />
+              <ColorField
+                id='qr-corner-color'
+                label='Eye center'
+                color={options.cornersDotOptions?.color ?? '#222222'}
+                onChange={onChangeCornerColor}
+              />
+            </Section>
+
+            <Section number='04' title='Logo'>
+              <InputFile
+                id='qr-logo'
+                label='Add a logo'
+                image={options.image}
+                imageName={imageName}
+                onChangeImage={onChangeImage}
+                onRemoveImage={onRemoveImage}
+              />
+            </Section>
+
+            <Section title='Save'>
+              <div className='flex flex-wrap items-end justify-between gap-4'>
+                <FormatPicker
+                  id='qr-extension'
+                  label='File format'
+                  fileExtension={fileExtension}
+                  onExtensionChange={onExtensionChange}
+                />
+                <button
+                  type='button'
+                  className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
+                  onClick={onDownload}
+                  disabled={isDataEmpty}
+                >
+                  Save as {fileExtension.toUpperCase()}
+                  <span aria-hidden='true'>↓</span>
+                </button>
+              </div>
+            </Section>
+          </div>
         </div>
       </main>
 
       <Footer />
-    </>
+    </div>
   )
 }
 

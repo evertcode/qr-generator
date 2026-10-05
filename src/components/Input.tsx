@@ -1,18 +1,30 @@
-interface Props {
-  placeholder: string
-  value: string | number | undefined,
-  onChange: any
-}
+import { InputProps } from '../types/ui'
+import { fieldBase, fieldInvalid, fieldLabel, fieldValid } from '../styles/field'
 
-function Input({ value, onChange, placeholder }: Props) {
+function Input ({ id, label, value, onChange, placeholder, error }: InputProps) {
+  const errorId = `${id}-error`
+
   return (
-    <input
-      placeholder={placeholder}
-      type='text'
-      className='py-3 px-4 bg-white rounded-lg placeholder-gray-400 text-gray-900 appearance-none inline-block w-full shadow-md'
-      value={value}
-      onChange={onChange}
-    />
+    <div className='flex flex-col gap-1'>
+      <label htmlFor={id} className={fieldLabel}>
+        {label}
+      </label>
+      <input
+        id={id}
+        placeholder={placeholder}
+        type='text'
+        className={`${fieldBase} ${error ? fieldInvalid : fieldValid}`}
+        value={value}
+        onChange={onChange}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+      />
+      {error && (
+        <p id={errorId} className='text-sm text-red-700'>
+          {error}
+        </p>
+      )}
+    </div>
   )
 }
 
