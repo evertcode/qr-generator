@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T18:56:19Z"
+last_implementation_at: "2026-10-05T19:02:25Z"
 has_completed_all_phases: "false"
 ---
 
@@ -94,12 +94,12 @@ Replace `standard` (cannot parse `.ts`/`.tsx`) with `neostandard`, keeping the S
 
 Upgrade Tailwind CSS to v3 with a config-only migration and confirm the UI looks the same.
 
-- [ ] Take desktop (~1280px) and mobile (~375px) screenshots of the current UI as a baseline.
-- [ ] Upgrade `tailwindcss` to the latest 3.x, and `postcss` and `autoprefixer` to their latest versions.
-- [ ] Migrate `tailwind.config.js`: rename `purge` to `content`, remove `mode: 'jit'`, `darkMode: false` and `variants`.
-- [ ] Compare new screenshots against the baseline and fix any visual differences.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Take desktop (~1280px) and mobile (~375px) screenshots of the current UI as a baseline. _(4 states: desktop, desktop with empty content and focus, desktop with color picker open, mobile.)_
+- [x] Upgrade `tailwindcss` to the latest 3.x, and `postcss` and `autoprefixer` to their latest versions. _(`tailwindcss@3.4.19`, `postcss@8.5.29`, `autoprefixer@10.6.1`.)_
+- [x] Migrate `tailwind.config.js`: rename `purge` to `content`, remove `mode: 'jit'`, `darkMode: false` and `variants`. _(Also dropped `vue` from the content glob, there are no Vue files.)_
+- [x] Compare new screenshots against the baseline and fix any visual differences. _(First diff: ~1% of pixels changed because Tailwind 3 `green` is a different palette, Tailwind 2 `green` became `emerald`. Fixed by mapping `green` to `colors.emerald` in `theme.extend.colors`, which also keeps the 5.5:1 contrast of `green-700`. Final pixel diff: 0 in all 4 states.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 5: Upgrade React to v18
 
@@ -114,6 +114,6 @@ Upgrade React to v18 and switch to the `createRoot` API.
 
 ## ⏭️ Next step
 
-Implement **Phase 4: Upgrade Tailwind to v3**.
+Implement **Phase 5: Upgrade React to v18**.
 
-Lint flag waved clean by 🐢 💨 🏎️ 🔧 🏁 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Fresh paint, same colors, applied by 🐢 💨 🏎️ 🔧 🏁 🎨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
