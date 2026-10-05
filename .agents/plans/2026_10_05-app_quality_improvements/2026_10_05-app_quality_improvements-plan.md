@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T22:31:34Z"
+last_implementation_at: "2026-10-05T22:40:12Z"
 has_completed_all_phases: "false"
 ---
 
@@ -203,11 +203,11 @@ Make the form comfortable on small screens and explain the QR jargon in the colo
 
 Automate the verification on every push and pull request, and document how to work on the project.
 
-- [ ] Create `.github/workflows/ci.yml` running on `push` and `pull_request`: `actions/setup-node` with `node-version-file: .nvmrc` and npm cache, then `npm ci`, `npm run lint`, `npm run type-check`, `npm test` and `npm run build`.
-- [ ] Create `README.md` with the project description, requirements (Node 24), scripts and deploy notes (Vercel).
-- [ ] Create `AGENTS.md` with the verification command, code style (`neostandard`), folder conventions (`src/components`, `src/hooks`, `src/utils`, `src/types`, `tests/`), the custom types rule and the plans folder (`.agents/plans`).
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `.github/workflows/ci.yml` running on `push` and `pull_request`: `actions/setup-node` with `node-version-file: .nvmrc` and npm cache, then `npm ci`, `npm run lint`, `npm run type-check`, `npm test` and `npm run build`. _(Uses `actions/checkout@v7` and `actions/setup-node@v7`, the latest releases. Runs on pull requests and pushes to `main`, with read-only `contents` permission and concurrency that cancels outdated runs. The same steps, including `npm ci`, were run locally and pass.)_
+- [x] Create `README.md` with the project description, requirements (Node 24), scripts and deploy notes (Vercel). _(Also documents the CI workflow and the pre-push check command.)_
+- [x] Create `AGENTS.md` with the verification command, code style (`neostandard`), folder conventions (`src/components`, `src/hooks`, `src/utils`, `src/types`, `tests/`), the custom types rule and the plans folder (`.agents/plans`). _(Also covers testing conventions (mocked `qr-code-styling`, Testing Library queries) and the Git workflow: feature branches and Conventional Commits.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 8: Security hardening
 
@@ -221,6 +221,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 7 to add the CI workflow, README and AGENTS.md.
+Implement Phase 8 to add the Vercel security headers and fix the non-breaking dependency vulnerabilities.
 
-Pocket-sized QR codes, copied and explained, thanks to [Codely](https://codely.com) AI tooling. 📱 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Every push now checked by a robot, documented for humans, thanks to [Codely](https://codely.com) AI tooling. 🤖 📱 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
