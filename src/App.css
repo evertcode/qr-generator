@@ -6,3 +6,9 @@ body {
   background-color: #8ec5fc;
   background-image: linear-gradient(62deg, #8ec5fc 0%, #e0c3fc 100%);
 }
+
+.qr-preview canvas,
+.qr-preview svg {
+  max-width: 100%;
+  height: auto;
+}

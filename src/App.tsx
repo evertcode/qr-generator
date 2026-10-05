@@ -17,6 +17,7 @@ import Header from './components/Header'
 import Input from './components/Input'
 import InputFile from './components/InputFile'
 import SelectExtension from './components/SelectExtension'
+import Section from './components/Section'
 import Footer from './components/Footer'
 
 import './App.css'
@@ -72,7 +73,6 @@ function App() {
   useEffect(() => {
     if (!qrCode) return
     qrCode.update(options)
-    console.log(options)
   }, [qrCode, options])
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -181,85 +181,111 @@ function App() {
   }
 
   return (
-    <>
+    <div className='min-h-screen flex flex-col'>
       <Header />
-      <main className='flex flex-col justify-center items-center gap-1'>
-        <div className='pt-4 xl:pt-10' ref={ref} />
+      <main className='flex-1 w-full max-w-6xl mx-auto px-4 py-6 lg:py-10 grid gap-6 lg:grid-cols-2 lg:items-start'>
+        <section
+          aria-label='QR code preview'
+          className='lg:sticky lg:top-6 bg-white rounded-2xl shadow-lg p-6 flex justify-center items-center'
+        >
+          <div className='qr-preview' ref={ref} />
+        </section>
 
-        <div className='flex flex-col pt-4 space-y-2'>
-          <Input
-            placeholder={'https://www.google.com/'}
-            value={options.data}
-            onChange={onDataChange}
-          />
+        <div className='bg-white rounded-2xl shadow-lg p-6 space-y-6'>
+          <Section title='Content'>
+            <Input
+              id='qr-data'
+              label='URL or text'
+              placeholder={'https://www.google.com/'}
+              value={options.data}
+              onChange={onDataChange}
+            />
+          </Section>
 
-          <Input
-            placeholder={'300'}
-            value={options.width}
-            onChange={onChangeWidth}
-          />
-
-          <Input
-            placeholder={'300'}
-            value={options.height}
-            onChange={onChangeHeight}
-          />
-
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Dots color:</label>
-            <div onClick={onShowDotPicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.dotsOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
+          <Section title='Size'>
+            <div className='grid grid-cols-2 gap-4'>
+              <Input
+                id='qr-width'
+                label='Width (px)'
+                placeholder={'300'}
+                value={options.width}
+                onChange={onChangeWidth}
+              />
+              <Input
+                id='qr-height'
+                label='Height (px)'
+                placeholder={'300'}
+                value={options.height}
+                onChange={onChangeHeight}
+              />
             </div>
-            {showDotPicker && (<div className='absolute z-10'>
-              <div onClick={onShowDotPicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.dotsOptions?.color} onChange={onChangeDotColor} />
-            </div>)}
-          </div>
+          </Section>
 
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Corners Square Color:</label>
-            <div onClick={onShowSquarePicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.cornersSquareOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
+          <Section title='Colors'>
+            <div className='relative flex items-center flex-row space-x-2'>
+              <label htmlFor='qr-dots-color' className='text-sm font-medium text-gray-700'>Dots color</label>
+              <button id='qr-dots-color' type='button' onClick={onShowDotPicker} className='p-1 bg-white shadow rounded-lg inline-block cursor-pointer'>
+                <div style={{
+                  backgroundColor: options.dotsOptions?.color
+                }} className='w-10 h-4 rounded-lg' />
+              </button>
+              {showDotPicker && (<div className='absolute top-full left-0 z-10'>
+                <div onClick={onShowDotPicker} className='fixed top-0 right-0 bottom-0 left-0' />
+                <SketchPicker color={options.dotsOptions?.color} onChange={onChangeDotColor} />
+              </div>)}
             </div>
-            {showSquarePicker && (<div className='absolute z-10'>
-              <div onClick={onShowSquarePicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.cornersSquareOptions?.color} onChange={onChangeSquareColor} />
-            </div>)}
-          </div>
 
-          <div className='flex items-center flex-row space-x-2'>
-            <label>Corners Dot Color:</label>
-            <div onClick={onShowCornerPicker} className='p-1 bg-white shadow rounded-lg inline-block pointer' >
-              <div style={{
-                backgroundColor: options.cornersDotOptions?.color
-              }} className='w-10 h-4 rounded-lg' />
+            <div className='relative flex items-center flex-row space-x-2'>
+              <label htmlFor='qr-square-color' className='text-sm font-medium text-gray-700'>Corners square color</label>
+              <button id='qr-square-color' type='button' onClick={onShowSquarePicker} className='p-1 bg-white shadow rounded-lg inline-block cursor-pointer'>
+                <div style={{
+                  backgroundColor: options.cornersSquareOptions?.color
+                }} className='w-10 h-4 rounded-lg' />
+              </button>
+              {showSquarePicker && (<div className='absolute top-full left-0 z-10'>
+                <div onClick={onShowSquarePicker} className='fixed top-0 right-0 bottom-0 left-0' />
+                <SketchPicker color={options.cornersSquareOptions?.color} onChange={onChangeSquareColor} />
+              </div>)}
             </div>
-            {showCornerPicker && (<div className='absolute z-10'>
-              <div onClick={onShowCornerPicker} className='fixed top-0 right-0 bottom-0 left-0' />
-              <SketchPicker color={options.cornersDotOptions?.color} onChange={onChangeCornerColor} />
-            </div>)}
-          </div>
 
-          <InputFile onChangeImage={onChangeImage} />
+            <div className='relative flex items-center flex-row space-x-2'>
+              <label htmlFor='qr-corner-color' className='text-sm font-medium text-gray-700'>Corners dot color</label>
+              <button id='qr-corner-color' type='button' onClick={onShowCornerPicker} className='p-1 bg-white shadow rounded-lg inline-block cursor-pointer'>
+                <div style={{
+                  backgroundColor: options.cornersDotOptions?.color
+                }} className='w-10 h-4 rounded-lg' />
+              </button>
+              {showCornerPicker && (<div className='absolute top-full left-0 z-10'>
+                <div onClick={onShowCornerPicker} className='fixed top-0 right-0 bottom-0 left-0' />
+                <SketchPicker color={options.cornersDotOptions?.color} onChange={onChangeCornerColor} />
+              </div>)}
+            </div>
+          </Section>
 
-          <div className='relative inline-block w-full text-gray-700'>
-            <SelectExtension fileExtension={fileExtension} onExtensionChange={onExtensionChange} />
-          </div>
-          <button
-            className='bg-green-500 text-white text-base font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-200'
-            onClick={onDownload}
-          >
-            Download
-          </button>
+          <Section title='Logo'>
+            <InputFile id='qr-logo' label='Select a file' onChangeImage={onChangeImage} />
+          </Section>
+
+          <Section title='Download'>
+            <SelectExtension
+              id='qr-extension'
+              label='Format'
+              fileExtension={fileExtension}
+              onExtensionChange={onExtensionChange}
+            />
+            <button
+              type='button'
+              className='w-full bg-green-500 text-white text-base font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-200'
+              onClick={onDownload}
+            >
+              Download
+            </button>
+          </Section>
         </div>
       </main>
 
       <Footer />
-    </>
+    </div>
   )
 }
 
