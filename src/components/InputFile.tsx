@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { InputFileProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
 
-function InputFile({ id, label, image, imageName, onChangeImage, onRemoveImage }: InputFileProps) {
+function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage }: InputFileProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const onOpenFileDialog = () => {

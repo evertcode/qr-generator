@@ -1,7 +1,7 @@
 import Logo from '../../assets/logo.svg'
 import { focusRing } from '../styles/focusRing'
 
-function Footer() {
+function Footer () {
   const currentYear = new Date().getFullYear()
 
   return (

@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T18:52:40Z"
+last_implementation_at: "2026-10-05T18:56:19Z"
 has_completed_all_phases: "false"
 ---
 
@@ -82,13 +82,13 @@ Move to TypeScript 5 with modern compiler options and clean up the dependency gr
 
 Replace `standard` (cannot parse `.ts`/`.tsx`) with `neostandard`, keeping the Standard code style with TypeScript support on ESLint 9.
 
-- [ ] Remove `standard` and the `eslintConfig` field from `package.json`.
-- [ ] Install `neostandard` and `eslint` 9 as dev dependencies.
-- [ ] Add `eslint.config.js` (flat config) using `neostandard({ ts: true })`, ignoring `dist`.
-- [ ] Add the `lint` script: `eslint .`.
-- [ ] Run `npm run lint` and fix the reported issues in `src/`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Remove `standard` and the `eslintConfig` field from `package.json`.
+- [x] Install `neostandard` and `eslint` 9 as dev dependencies. _(`neostandard@0.13.0` and `eslint@9.39.5`. ESLint 10 exists but `neostandard` peers on `^9.0.0`.)_
+- [x] Add `eslint.config.js` (flat config) using `neostandard({ ts: true })`, ignoring `dist`. _(Named `eslint.config.mjs`, like `vite.config.mjs`, because `package.json` has no `"type": "module"`.)_
+- [x] Add the `lint` script: `eslint .`.
+- [x] Run `npm run lint` and fix the reported issues in `src/`. _(11 errors and 1 warning, all fixed with `eslint --fix`: space before function parentheses, unnecessary JSX braces, an unused `eslint-disable` comment, and a quoted key in `tailwind.config.js`.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 4: Upgrade Tailwind to v3
 
@@ -114,6 +114,6 @@ Upgrade React to v18 and switch to the `createRoot` API.
 
 ## ⏭️ Next step
 
-Implement **Phase 3: Replace the linter with a TypeScript-aware one**.
+Implement **Phase 4: Upgrade Tailwind to v3**.
 
-Types tightened at the pit stop by 🐢 💨 🏎️ 🔧 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Lint flag waved clean by 🐢 💨 🏎️ 🔧 🏁 (Turbotuga™, [Codely](https://codely.com)’s mascot)

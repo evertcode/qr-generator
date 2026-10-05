@@ -1,7 +1,7 @@
 import { SelectExtensionProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
 
-function SelectExtension({ id, label, fileExtension, onExtensionChange }: SelectExtensionProps) {
+function SelectExtension ({ id, label, fileExtension, onExtensionChange }: SelectExtensionProps) {
   return (
     <div className='flex flex-col space-y-1'>
       <label htmlFor={id} className='text-sm font-medium text-gray-700'>

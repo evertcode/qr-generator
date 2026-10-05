@@ -1,7 +1,7 @@
 import { InputProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
 
-function Input({ id, label, value, onChange, placeholder, error }: InputProps) {
+function Input ({ id, label, value, onChange, placeholder, error }: InputProps) {
   const errorId = `${id}-error`
 
   return (

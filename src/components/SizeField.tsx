@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useState } from 'react'
 import { SizeFieldProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
 
-function SizeField({ id, label, value, min, max, onChange }: SizeFieldProps) {
+function SizeField ({ id, label, value, min, max, onChange }: SizeFieldProps) {
   const [draft, setDraft] = useState<string>(String(value))
 
   useEffect(() => {

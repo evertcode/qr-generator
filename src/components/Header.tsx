@@ -1,4 +1,4 @@
-function Header() {
+function Header () {
   return (
     <header className='flex flex-col justify-center items-center px-4 pt-6 text-center'>
       <h1 className='font-popins text-3xl sm:text-4xl xl:text-6xl font-bold text-gray-900'>

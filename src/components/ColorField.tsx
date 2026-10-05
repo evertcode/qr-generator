@@ -3,7 +3,7 @@ import { ColorResult, SketchPicker } from 'react-color'
 import { ColorFieldProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
 
-function ColorField({ id, label, color, onChange }: ColorFieldProps) {
+function ColorField ({ id, label, color, onChange }: ColorFieldProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
 

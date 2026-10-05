@@ -24,7 +24,7 @@ import { focusRing } from './styles/focusRing'
 
 import './App.css'
 
-function App() {
+function App () {
   const [options, setOptions] = useState<Options>({
     width: 300,
     height: 300,
@@ -106,7 +106,6 @@ function App() {
     const target = event.target as HTMLInputElement
     const file = target.files?.item(0)
 
-    // eslint-disable-next-line no-undef
     const reader = new FileReader()
 
     if (file) {
@@ -191,7 +190,7 @@ function App() {
             <Input
               id='qr-data'
               label='URL or text'
-              placeholder={'https://www.google.com/'}
+              placeholder='https://www.google.com/'
               value={options.data}
               onChange={onDataChange}
               error={isDataEmpty ? 'Enter a URL or some text to generate the QR code.' : undefined}
