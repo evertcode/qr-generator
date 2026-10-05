@@ -1,12 +1,8 @@
-const colors = require('tailwindcss/colors')
-
 module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Tailwind 2 `green` was the palette renamed to `emerald` in Tailwind 3
-        green: colors.emerald,
         paper: '#f4f1ea',
         ink: '#1c1b18',
         muted: '#5c5850',

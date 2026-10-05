@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:26:38Z"
+last_implementation_at: "2026-10-05T19:31:10Z"
 has_completed_all_phases: "false"
 ---
 
@@ -133,14 +133,14 @@ Restyle the text and size fields as flat, ruled form fields with mono values.
 
 Replace the stock third-party look of the color picker, logo upload and download controls.
 
-- [ ] Rewrite `ColorField` with a native `<input type="color">` swatch and a mono hex text field that accepts `#rgb` / `#rrggbb` and ignores invalid values.
-- [ ] Remove `react-color` and `@types/react-color`.
-- [ ] Restyle `InputFile`: plain `Add a logo` text button with a small mascot-free icon when empty, and a row with thumbnail, file name and `change` / `remove` text links when a logo is set.
-- [ ] Replace `SelectExtension` with `FormatPicker`, a keyboard-accessible radio group of `svg` / `png` / `jpeg` / `webp` labelled `File format`.
-- [ ] Restyle the download button as `Save as {EXT}` in `moss` with white text, and remove the `green` → `emerald` mapping from `tailwind.config.js` once no component uses `green-*`.
-- [ ] Review in the browser: color changes from swatch and hex field, logo upload / change / remove, format switching with keyboard, download.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Rewrite `ColorField` with a native `<input type="color">` swatch and a mono hex text field that accepts `#rgb` / `#rrggbb` and ignores invalid values. _(Also accepts values without `#`. Parsing in `src/utils/hexColor.ts` (`normalizeHexColor`). Invalid input shows the red line and `aria-invalid`, keeps the last valid color and is restored on blur. The hex field is wrapped in a fixed `w-24` container so swatches align.)_
+- [x] Remove `react-color` and `@types/react-color`. _(The React 18.3 `defaultProps` warning is gone.)_
+- [x] Restyle `InputFile`: plain `Add a logo` text button with a small mascot-free icon when empty, and a row with thumbnail, file name and `change` / `remove` text links when a logo is set. _(Empty state shows a `+` mark before the label. The `Add a logo` copy itself is applied in Phase 5, as listed in the copy table.)_
+- [x] Replace `SelectExtension` with `FormatPicker`, a keyboard-accessible radio group of `svg` / `png` / `jpeg` / `webp` labelled `File format`. _(Native radios, so arrow keys move the selection. Focus shows a 2px `moss` outline on the segment.)_
+- [x] Restyle the download button as `Save as {EXT}` in `moss` with white text, and remove the `green` → `emerald` mapping from `tailwind.config.js` once no component uses `green-*`. _(Mapping and the `tailwindcss/colors` import removed.)_
+- [x] Review in the browser: color changes from swatch and hex field, logo upload / change / remove, format switching with keyboard, download. _(Hex `#f00` turns the eye frames red in the canvas, swatch change updates the hex field, logo remove/upload works, Tab reaches the format group and then `Save as`, arrow keys switch format, PNG download works, no console errors.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 5: Copy and finishing details
 
@@ -155,6 +155,6 @@ Apply the remaining personal copy and polish the footer and page metadata.
 
 ## ⏭️ Next step
 
-Implement **Phase 4: Color, logo and save**.
+Implement **Phase 5: Copy and finishing details**.
 
-Fields ruled by hand by 🐢 💨 🖋️ ✂️ 📏 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Inks mixed by hand by 🐢 💨 🖋️ ✂️ 📏 🎨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

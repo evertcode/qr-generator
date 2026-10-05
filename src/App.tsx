@@ -16,7 +16,7 @@ import Input from './components/Input'
 import SizeField from './components/SizeField'
 import ColorField from './components/ColorField'
 import InputFile from './components/InputFile'
-import SelectExtension from './components/SelectExtension'
+import FormatPicker from './components/FormatPicker'
 import Section from './components/Section'
 import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
@@ -102,8 +102,8 @@ function App () {
     }))
   }
 
-  const onExtensionChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setFileExtension(event.target.value as FileExtension)
+  const onExtensionChange = (extension: FileExtension) => {
+    setFileExtension(extension)
   }
 
   const onChangeImage = (event: ChangeEvent<HTMLInputElement>) => {
@@ -264,22 +264,21 @@ function App () {
             </Section>
 
             <Section title='Download'>
-              <div className='flex items-end gap-3'>
-                <div className='w-32'>
-                  <SelectExtension
-                    id='qr-extension'
-                    label='Format'
-                    fileExtension={fileExtension}
-                    onExtensionChange={onExtensionChange}
-                  />
-                </div>
+              <div className='flex flex-wrap items-end justify-between gap-4'>
+                <FormatPicker
+                  id='qr-extension'
+                  label='File format'
+                  fileExtension={fileExtension}
+                  onExtensionChange={onExtensionChange}
+                />
                 <button
                   type='button'
-                  className={`flex-1 h-10 bg-green-700 text-white text-base font-semibold px-4 rounded-lg shadow-md hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed ${focusRing}`}
+                  className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
                   onClick={onDownload}
                   disabled={isDataEmpty}
                 >
-                  Download {fileExtension.toUpperCase()}
+                  Save as {fileExtension.toUpperCase()}
+                  <span aria-hidden='true'>↓</span>
                 </button>
               </div>
             </Section>

@@ -54,3 +54,29 @@ body {
 .qr-range:focus-visible {
   @apply outline outline-2 outline-offset-4 outline-moss;
 }
+
+.qr-swatch {
+  @apply w-8 h-8 p-0 bg-transparent border border-ink cursor-pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.qr-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.qr-swatch::-webkit-color-swatch {
+  border: none;
+}
+
+.qr-swatch::-moz-color-swatch {
+  border: none;
+}
+
+.qr-swatch:focus {
+  outline: none;
+}
+
+.qr-swatch:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-moss;
+}

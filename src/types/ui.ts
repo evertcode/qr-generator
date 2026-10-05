@@ -2,7 +2,7 @@ import { ChangeEvent, ReactNode } from 'react'
 import { FileExtension } from 'qr-code-styling'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
-export type SelectChangeHandler = (event: ChangeEvent<HTMLSelectElement>) => void
+export type ExtensionChangeHandler = (extension: FileExtension) => void
 export type NumberChangeHandler = (value: number) => void
 export type ColorChangeHandler = (color: string) => void
 
@@ -40,11 +40,11 @@ export interface InputFileProps {
   onRemoveImage: () => void
 }
 
-export interface SelectExtensionProps {
+export interface FormatPickerProps {
   id: string
   label: string
   fileExtension: FileExtension
-  onExtensionChange: SelectChangeHandler
+  onExtensionChange: ExtensionChangeHandler
 }
 
 export interface SectionProps {

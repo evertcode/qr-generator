@@ -1,63 +1,63 @@
-import { useEffect, useRef, useState } from 'react'
-import { ColorResult, SketchPicker } from 'react-color'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { ColorFieldProps } from '../types/ui'
-import { focusRing } from '../styles/focusRing'
+import { fieldBase, fieldInvalid, fieldLabel, fieldValid } from '../styles/field'
+import { normalizeHexColor } from '../utils/hexColor'
 
 function ColorField ({ id, label, color, onChange }: ColorFieldProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [draft, setDraft] = useState<string>(color)
+  const swatchColor = normalizeHexColor(color) ?? '#000000'
+  const isDraftValid = normalizeHexColor(draft) !== null
 
   useEffect(() => {
-    if (!isOpen) return
+    setDraft(color)
+  }, [color])
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-        buttonRef.current?.focus()
-      }
+  const onSwatchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value)
+  }
+
+  const onDraftChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value
+    setDraft(raw)
+
+    const normalized = normalizeHexColor(raw)
+    if (normalized) {
+      onChange(normalized)
     }
-
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [isOpen])
-
-  const onToggle = () => {
-    setIsOpen((oldValue) => !oldValue)
   }
 
-  const onClose = () => {
-    setIsOpen(false)
-  }
-
-  const onPickerChange = (result: ColorResult) => {
-    onChange(result.hex)
+  const onDraftBlur = () => {
+    setDraft(color)
   }
 
   return (
-    <div className='relative flex items-center justify-between'>
-      <label htmlFor={id} className='text-sm font-medium text-gray-700'>
+    <div className='flex items-center justify-between gap-4'>
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
-      <button
-        id={id}
-        ref={buttonRef}
-        type='button'
-        aria-haspopup='dialog'
-        aria-expanded={isOpen}
-        onClick={onToggle}
-        className={`flex items-center space-x-2 py-1 pl-1 pr-3 bg-white border border-gray-200 shadow-sm rounded-lg cursor-pointer hover:bg-gray-50 ${focusRing}`}
-      >
-        <span style={{ backgroundColor: color }} className='w-8 h-6 rounded-md border border-gray-200' />
-        <span className='font-mono text-sm text-gray-700 uppercase'>{color}</span>
-      </button>
-      {isOpen && (
-        <div role='dialog' aria-label={`${label} picker`} className='absolute top-full right-0 mt-2 z-10'>
-          <div onClick={onClose} className='fixed top-0 right-0 bottom-0 left-0' />
-          <div className='relative'>
-            <SketchPicker color={color} onChange={onPickerChange} disableAlpha />
-          </div>
+      <div className='flex items-center gap-3'>
+        <input
+          type='color'
+          aria-label={`${label} swatch`}
+          className='qr-swatch'
+          value={swatchColor}
+          onChange={onSwatchChange}
+        />
+        <div className='w-24'>
+          <input
+            id={id}
+            type='text'
+            spellCheck={false}
+            autoComplete='off'
+            maxLength={7}
+            className={`${fieldBase} ${isDraftValid ? fieldValid : fieldInvalid} uppercase`}
+            value={draft}
+            onChange={onDraftChange}
+            onBlur={onDraftBlur}
+            aria-invalid={!isDraftValid}
+          />
         </div>
-      )}
+      </div>
     </div>
   )
 }
