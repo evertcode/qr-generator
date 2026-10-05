@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:20:01Z"
+last_implementation_at: "2026-10-05T19:22:36Z"
 has_completed_all_phases: "false"
 ---
 
@@ -63,7 +63,8 @@ Fonts: IBM Plex Sans (text) and IBM Plex Mono (values, wordmark), replacing Popp
 
 ### UI components
 
-- `Section`: gains a `number: string` prop rendered as `01`, `02`… (Phase 2).
+- `Section`: gains an optional `number?: string` prop rendered as `01`, `02`… (Phase 2). Optional because the `Save` section has no number.
+- `QrLabel` (new, Phase 2): props `content: string`, `width: number`, `height: number`, `children: ReactNode`. Renders the cut-out label and its caption.
 - `ColorField`: same props, implemented with a native `<input type="color">` plus a hex text field; `react-color` and `@types/react-color` are removed (Phase 4).
 - `SelectExtension` is replaced by `FormatPicker` (`id`, `label`, `fileExtension`, `onExtensionChange: (extension: FileExtension) => void`), a radio group of `svg`, `png`, `jpeg`, `webp` (Phase 4).
 
@@ -109,13 +110,13 @@ Replace the template look at the root: palette, fonts, background, favicon and h
 
 Replace the two twin cards with a single sheet split by thin rules, and present the QR as a cut-out label.
 
-- [ ] Replace the preview and controls cards in `src/App.tsx` with one sheet on `paper`, divided by `rule` lines instead of shadows and large radii.
-- [ ] Render the QR preview as a label: white tag with a dashed cut border and a caption showing the encoded content (truncated) and the size in `ink` mono text.
-- [ ] Add the `number` prop to `Section` and render the number in mono next to the title, with a rule after it.
-- [ ] Keep the preview sticky on large screens and stacked on mobile.
-- [ ] Review the page in the browser at ~1280px and ~375px.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Replace the preview and controls cards in `src/App.tsx` with one sheet on `paper`, divided by `rule` lines instead of shadows and large radii. _(Top `ink` rule, `5fr / 6fr` columns split by a `rule` line on large screens, horizontal `rule` between preview and controls on mobile.)_
+- [x] Render the QR preview as a label: white tag with a dashed cut border and a caption showing the encoded content (truncated) and the size in `ink` mono text. _(New `QrLabel` component: dashed `muted` cut border with a ✂ mark, white tag, caption with truncated content and `W × H px`.)_
+- [x] Add the `number` prop to `Section` and render the number in mono next to the title, with a rule after it. _(Optional prop: the `Download` section has no number.)_
+- [x] Keep the preview sticky on large screens and stacked on mobile.
+- [x] Review the page in the browser at ~1280px and ~375px. _(Sticky preview, long content truncated in the caption, no horizontal overflow on mobile, no console errors.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 3: Fields and size
 
@@ -154,6 +155,6 @@ Apply the remaining personal copy and polish the footer and page metadata.
 
 ## ⏭️ Next step
 
-Implement **Phase 2: Layout and preview label**.
+Implement **Phase 3: Fields and size**.
 
-Fresh ink on paper, signed by 🐢 💨 🖋️ (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Cut along the dotted line by 🐢 💨 🖋️ ✂️ (Turbotuga™, [Codely](https://codely.com)’s mascot)

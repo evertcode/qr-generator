@@ -18,6 +18,7 @@ import ColorField from './components/ColorField'
 import InputFile from './components/InputFile'
 import SelectExtension from './components/SelectExtension'
 import Section from './components/Section'
+import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
 
 import { focusRing } from './styles/focusRing'
@@ -177,99 +178,103 @@ function App () {
   return (
     <div className='min-h-screen flex flex-col'>
       <Header />
-      <main className='flex-1 w-full max-w-6xl mx-auto px-4 py-6 lg:py-10 grid gap-6 lg:grid-cols-2 lg:items-start'>
-        <section
-          aria-label='QR code preview'
-          className='lg:sticky lg:top-6 bg-white rounded-2xl shadow-lg p-6 flex justify-center items-center'
-        >
-          <div className='qr-preview' ref={ref} />
-        </section>
+      <main className='flex-1 w-full max-w-6xl mx-auto px-4 py-8 lg:py-12'>
+        <div className='grid border-t border-ink lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start'>
+          <section
+            aria-label='QR code preview'
+            className='py-8 lg:pr-10 lg:sticky lg:top-0'
+          >
+            <QrLabel content={options.data ?? ''} width={options.width ?? 300} height={options.height ?? 300}>
+              <div className='qr-preview' ref={ref} />
+            </QrLabel>
+          </section>
 
-        <div className='bg-white rounded-2xl shadow-lg p-6 space-y-6'>
-          <Section title='Content'>
-            <Input
-              id='qr-data'
-              label='URL or text'
-              placeholder='https://www.google.com/'
-              value={options.data}
-              onChange={onDataChange}
-              error={isDataEmpty ? 'Enter a URL or some text to generate the QR code.' : undefined}
-            />
-          </Section>
-
-          <Section title='Size'>
-            <div className='grid grid-cols-2 gap-4'>
-              <SizeField
-                id='qr-width'
-                label='Width (px)'
-                value={options.width ?? 300}
-                min={100}
-                max={1000}
-                onChange={onChangeWidth}
+          <div className='py-8 space-y-8 border-t border-rule lg:border-t-0 lg:border-l lg:pl-10'>
+            <Section number='01' title='Content'>
+              <Input
+                id='qr-data'
+                label='URL or text'
+                placeholder='https://www.google.com/'
+                value={options.data}
+                onChange={onDataChange}
+                error={isDataEmpty ? 'Enter a URL or some text to generate the QR code.' : undefined}
               />
-              <SizeField
-                id='qr-height'
-                label='Height (px)'
-                value={options.height ?? 300}
-                min={100}
-                max={1000}
-                onChange={onChangeHeight}
-              />
-            </div>
-          </Section>
+            </Section>
 
-          <Section title='Colors'>
-            <ColorField
-              id='qr-dots-color'
-              label='Dots color'
-              color={options.dotsOptions?.color ?? '#222222'}
-              onChange={onChangeDotColor}
-            />
-            <ColorField
-              id='qr-square-color'
-              label='Corners square color'
-              color={options.cornersSquareOptions?.color ?? '#222222'}
-              onChange={onChangeSquareColor}
-            />
-            <ColorField
-              id='qr-corner-color'
-              label='Corners dot color'
-              color={options.cornersDotOptions?.color ?? '#222222'}
-              onChange={onChangeCornerColor}
-            />
-          </Section>
-
-          <Section title='Logo'>
-            <InputFile
-              id='qr-logo'
-              label='Select an image'
-              image={options.image}
-              imageName={imageName}
-              onChangeImage={onChangeImage}
-              onRemoveImage={onRemoveImage}
-            />
-          </Section>
-
-          <Section title='Download'>
-            <div className='flex items-end gap-3'>
-              <div className='w-32'>
-                <SelectExtension
-                  id='qr-extension'
-                  label='Format'
-                  fileExtension={fileExtension}
-                  onExtensionChange={onExtensionChange}
+            <Section number='02' title='Size'>
+              <div className='grid grid-cols-2 gap-4'>
+                <SizeField
+                  id='qr-width'
+                  label='Width (px)'
+                  value={options.width ?? 300}
+                  min={100}
+                  max={1000}
+                  onChange={onChangeWidth}
+                />
+                <SizeField
+                  id='qr-height'
+                  label='Height (px)'
+                  value={options.height ?? 300}
+                  min={100}
+                  max={1000}
+                  onChange={onChangeHeight}
                 />
               </div>
-              <button
-                type='button'
-                className={`flex-1 h-10 bg-green-700 text-white text-base font-semibold px-4 rounded-lg shadow-md hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed ${focusRing}`}
-                onClick={onDownload}
-                disabled={isDataEmpty}
-              >
-                Download {fileExtension.toUpperCase()}
-              </button>
-            </div>
-          </Section>
+            </Section>
+
+            <Section number='03' title='Colors'>
+              <ColorField
+                id='qr-dots-color'
+                label='Dots color'
+                color={options.dotsOptions?.color ?? '#222222'}
+                onChange={onChangeDotColor}
+              />
+              <ColorField
+                id='qr-square-color'
+                label='Corners square color'
+                color={options.cornersSquareOptions?.color ?? '#222222'}
+                onChange={onChangeSquareColor}
+              />
+              <ColorField
+                id='qr-corner-color'
+                label='Corners dot color'
+                color={options.cornersDotOptions?.color ?? '#222222'}
+                onChange={onChangeCornerColor}
+              />
+            </Section>
+
+            <Section number='04' title='Logo'>
+              <InputFile
+                id='qr-logo'
+                label='Select an image'
+                image={options.image}
+                imageName={imageName}
+                onChangeImage={onChangeImage}
+                onRemoveImage={onRemoveImage}
+              />
+            </Section>
+
+            <Section title='Download'>
+              <div className='flex items-end gap-3'>
+                <div className='w-32'>
+                  <SelectExtension
+                    id='qr-extension'
+                    label='Format'
+                    fileExtension={fileExtension}
+                    onExtensionChange={onExtensionChange}
+                  />
+                </div>
+                <button
+                  type='button'
+                  className={`flex-1 h-10 bg-green-700 text-white text-base font-semibold px-4 rounded-lg shadow-md hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed ${focusRing}`}
+                  onClick={onDownload}
+                  disabled={isDataEmpty}
+                >
+                  Download {fileExtension.toUpperCase()}
+                </button>
+              </div>
+            </Section>
+          </div>
         </div>
       </main>
 

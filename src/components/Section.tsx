@@ -1,10 +1,12 @@
 import { SectionProps } from '../types/ui'
 
-function Section ({ title, children }: SectionProps) {
+function Section ({ number, title, children }: SectionProps) {
   return (
-    <section className='space-y-3'>
-      <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
-        {title}
+    <section className='space-y-4'>
+      <h2 className='flex items-baseline gap-3 text-sm'>
+        {number && <span className='font-mono text-muted'>{number}</span>}
+        <span className='font-medium'>{title}</span>
+        <span aria-hidden='true' className='flex-1 border-t border-rule' />
       </h2>
       {children}
     </section>

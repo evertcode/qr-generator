@@ -48,6 +48,14 @@ export interface SelectExtensionProps {
 }
 
 export interface SectionProps {
+  number?: string
   title: string
+  children: ReactNode
+}
+
+export interface QrLabelProps {
+  content: string
+  width: number
+  height: number
   children: ReactNode
 }
