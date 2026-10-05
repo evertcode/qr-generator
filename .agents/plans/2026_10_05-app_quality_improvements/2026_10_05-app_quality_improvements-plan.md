@@ -17,8 +17,8 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T22:40:12Z"
-has_completed_all_phases: "false"
+last_implementation_at: "2026-10-05T23:07:02Z"
+has_completed_all_phases: "true"
 ---
 
 # App quality improvements
@@ -213,14 +213,14 @@ Automate the verification on every push and pull request, and document how to wo
 
 Add security headers to the Vercel deployment and fix the non-breaking dependency vulnerabilities.
 
-- [ ] Add a `headers` block to [`vercel.json`](../../../vercel.json) with `Content-Security-Policy` (allowing Google Fonts, `data:` and `blob:` images for uploaded logos and canvas exports), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY` and a restrictive `Permissions-Policy`.
-- [ ] Check the CSP with `npm run build && npm run serve` (or a Vercel preview): generate, upload a logo, download in every format and copy, with no CSP errors in the console.
-- [ ] Run `npm audit fix` (no `--force`). Leave the Tailwind 4 upgrade out of scope and note any remaining advisories in the PR description.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add a `headers` block to [`vercel.json`](../../../vercel.json) with `Content-Security-Policy` (allowing Google Fonts, `data:` and `blob:` images for uploaded logos and canvas exports), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY` and a restrictive `Permissions-Policy`. _(The legacy `routes` block had to move to `rewrites`, because Vercel rejects `headers` next to `routes`. `connect-src` also allows `data:` and `blob:`, since `qr-code-styling` reads the logo with an XHR when exporting SVG. Added `Strict-Transport-Security` as well.)_
+- [x] Check the CSP with `npm run build && npm run serve` (or a Vercel preview): generate, upload a logo, download in every format and copy, with no CSP errors in the console. _(`vite preview` does not apply Vercel headers, so Playwright injected the exact `vercel.json` headers into every response. With the default logo and an uploaded PNG: all 4 formats download, the SVG embeds the logo, copy works, Google Fonts load, zero `securitypolicyviolation` events and no console errors.)_
+- [x] Run `npm audit fix` (no `--force`). Leave the Tailwind 4 upgrade out of scope and note any remaining advisories in the PR description. _(Fixed `brace-expansion`. 5 high advisories remain for `braces@3.0.3`, pulled only by `tailwindcss@3` (`chokidar`, `micromatch`) at build time and never shipped to the browser. The only fix is the Tailwind 4 upgrade.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ## ⏭️ Next step
 
-Implement Phase 8 to add the Vercel security headers and fix the non-breaking dependency vulnerabilities.
+All phases are complete. Open a pull request from `feature/app-quality-improvements` to `main` and let CI run.
 
-Every push now checked by a robot, documented for humans, thanks to [Codely](https://codely.com) AI tooling. 🤖 📱 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Locked, checked and shipped: a sturdier QR generator thanks to [Codely](https://codely.com) AI tooling. 🔒 🤖 📱 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
