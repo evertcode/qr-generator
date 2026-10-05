@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { SizeFieldProps } from '../types/ui'
+import { focusRing } from '../styles/focusRing'
 
 function SizeField({ id, label, value, min, max, onChange }: SizeFieldProps) {
   const [draft, setDraft] = useState<string>(String(value))
@@ -37,7 +38,7 @@ function SizeField({ id, label, value, min, max, onChange }: SizeFieldProps) {
         inputMode='numeric'
         min={min}
         max={max}
-        className='py-3 px-4 bg-white rounded-lg border border-gray-200 placeholder-gray-400 text-gray-900 w-full shadow-sm'
+        className={`py-3 px-4 bg-white rounded-lg border border-gray-200 placeholder-gray-400 text-gray-900 w-full shadow-sm ${focusRing}`}
         value={draft}
         onChange={onDraftChange}
         onBlur={onDraftBlur}
@@ -48,7 +49,7 @@ function SizeField({ id, label, value, min, max, onChange }: SizeFieldProps) {
         min={min}
         max={max}
         step={10}
-        className='qr-range w-full cursor-pointer'
+        className={`qr-range w-full cursor-pointer rounded ${focusRing}`}
         value={value}
         onChange={onRangeChange}
       />

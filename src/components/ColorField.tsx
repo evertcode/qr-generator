@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import { ColorFieldProps } from '../types/ui'
+import { focusRing } from '../styles/focusRing'
 
 function ColorField({ id, label, color, onChange }: ColorFieldProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -44,7 +45,7 @@ function ColorField({ id, label, color, onChange }: ColorFieldProps) {
         aria-haspopup='dialog'
         aria-expanded={isOpen}
         onClick={onToggle}
-        className='flex items-center space-x-2 py-1 pl-1 pr-3 bg-white border border-gray-200 shadow-sm rounded-lg cursor-pointer hover:bg-gray-50'
+        className={`flex items-center space-x-2 py-1 pl-1 pr-3 bg-white border border-gray-200 shadow-sm rounded-lg cursor-pointer hover:bg-gray-50 ${focusRing}`}
       >
         <span style={{ backgroundColor: color }} className='w-8 h-6 rounded-md border border-gray-200' />
         <span className='font-mono text-sm text-gray-700 uppercase'>{color}</span>

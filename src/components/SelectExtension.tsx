@@ -1,4 +1,5 @@
 import { SelectExtensionProps } from '../types/ui'
+import { focusRing } from '../styles/focusRing'
 
 function SelectExtension({ id, label, fileExtension, onExtensionChange }: SelectExtensionProps) {
   return (
@@ -9,7 +10,7 @@ function SelectExtension({ id, label, fileExtension, onExtensionChange }: Select
       <div className='relative inline-block w-full text-gray-700'>
         <select
           id={id}
-          className='w-full h-10 pl-3 pr-6 text-base border border-gray-200 rounded-lg appearance-none focus:shadow-outline'
+          className={`w-full h-10 pl-3 pr-6 text-base bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer ${focusRing}`}
           onChange={onExtensionChange}
           value={fileExtension}
         >

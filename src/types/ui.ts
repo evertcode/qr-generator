@@ -12,6 +12,7 @@ export interface InputProps {
   placeholder: string
   value: string | number | undefined
   onChange: InputChangeHandler
+  error?: string
 }
 
 export interface SizeFieldProps {

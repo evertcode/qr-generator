@@ -20,6 +20,8 @@ import SelectExtension from './components/SelectExtension'
 import Section from './components/Section'
 import Footer from './components/Footer'
 
+import { focusRing } from './styles/focusRing'
+
 import './App.css'
 
 function App() {
@@ -72,6 +74,8 @@ function App() {
     if (!qrCode) return
     qrCode.update(options)
   }, [qrCode, options])
+
+  const isDataEmpty = !options.data?.trim()
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
     setOptions((opts) => ({
@@ -135,7 +139,7 @@ function App() {
   }
 
   const onDownload = () => {
-    if (!qrCode) return
+    if (!qrCode || isDataEmpty) return
     qrCode.download({
       extension: fileExtension
     })
@@ -190,6 +194,7 @@ function App() {
               placeholder={'https://www.google.com/'}
               value={options.data}
               onChange={onDataChange}
+              error={isDataEmpty ? 'Enter a URL or some text to generate the QR code.' : undefined}
             />
           </Section>
 
@@ -258,8 +263,9 @@ function App() {
               </div>
               <button
                 type='button'
-                className='flex-1 h-10 bg-green-500 text-white text-base font-semibold px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-200'
+                className={`flex-1 h-10 bg-green-700 text-white text-base font-semibold px-4 rounded-lg shadow-md hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed ${focusRing}`}
                 onClick={onDownload}
+                disabled={isDataEmpty}
               >
                 Download {fileExtension.toUpperCase()}
               </button>
