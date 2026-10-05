@@ -1,11 +1,19 @@
+import Logo from '../../assets/logo.svg'
+
 function Header () {
   return (
-    <header className='flex flex-col justify-center items-center px-4 pt-6 text-center'>
-      <h1 className='font-popins text-3xl sm:text-4xl xl:text-6xl font-bold text-gray-900'>
-        QR Code Generator
+    <header className='w-full max-w-6xl mx-auto px-4 pt-6'>
+      <div className='flex items-center gap-2 pb-3 border-b border-ink'>
+        <img src={Logo} alt='' className='w-6 h-6' />
+        <span className='font-mono text-sm font-medium'>
+          evertcode <span className='text-muted'>/</span> qr
+        </span>
+      </div>
+      <h1 className='mt-8 max-w-2xl text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-tight text-balance'>
+        Make a QR that looks like yours.
       </h1>
-      <p className='mt-2 max-w-xl text-base sm:text-lg text-gray-800'>
-        Turn any link or text into a custom QR code. Pick colors, add your logo and download it as SVG, PNG, JPEG or WEBP.
+      <p className='mt-3 text-base sm:text-lg text-muted'>
+        No sign-up, no tracking. Nothing leaves your browser.
       </p>
     </header>
   )
