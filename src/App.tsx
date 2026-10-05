@@ -50,6 +50,9 @@ const COPY_MESSAGES: Record<CopyResult, string> = {
 }
 const COPY_STATUS_DURATION_MS = 4000
 
+const EYE_FRAME_HINT = 'The outer square in each corner.'
+const EYE_CENTER_HINT = 'The dot inside each corner square.'
+
 const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
 const LOW_CORRECTION_LEVELS: readonly ErrorCorrectionLevel[] = ['L', 'M']
@@ -241,7 +244,7 @@ function App () {
             </Section>
 
             <Section number='02' title='Size'>
-              <div className='grid grid-cols-2 gap-6'>
+              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
                 <SizeField
                   id='qr-width'
                   label='Width'
@@ -277,12 +280,14 @@ function App () {
               <ColorField
                 id='qr-square-color'
                 label='Eye frame'
+                hint={EYE_FRAME_HINT}
                 color={options.cornersSquareOptions?.color ?? '#222222'}
                 onChange={onChangeColor('cornersSquare')}
               />
               <ColorField
                 id='qr-corner-color'
                 label='Eye center'
+                hint={EYE_CENTER_HINT}
                 color={options.cornersDotOptions?.color ?? '#222222'}
                 onChange={onChangeColor('cornersDot')}
               />

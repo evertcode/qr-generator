@@ -179,4 +179,11 @@ describe('App', () => {
     expect(await screen.findByText('Copied to clipboard')).toHaveAttribute('role', 'status')
     expect(write).toHaveBeenCalledOnce()
   })
+
+  it('describes the eye color fields with their hints', () => {
+    render(<App />)
+
+    expect(screen.getByLabelText('Eye frame')).toHaveAccessibleDescription('The outer square in each corner.')
+    expect(screen.getByLabelText('Eye center')).toHaveAccessibleDescription('The dot inside each corner square.')
+  })
 })

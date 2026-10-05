@@ -30,6 +30,7 @@ export interface ColorFieldProps {
   label: string
   color: string
   onChange: ColorChangeHandler
+  hint?: string
 }
 
 export interface InputFileProps {

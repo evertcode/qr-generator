@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T22:24:57Z"
+last_implementation_at: "2026-10-05T22:31:34Z"
 has_completed_all_phases: "false"
 ---
 
@@ -192,12 +192,12 @@ Add a "Copy image" action next to the download button that copies the QR as PNG 
 
 Make the form comfortable on small screens and explain the QR jargon in the color fields.
 
-- [ ] Change the size grid in `App` to `grid-cols-1 sm:grid-cols-2`, and check the color and size rows at 360 px width.
-- [ ] Add `hint?: string` to `ColorFieldProps`, render it under the field and link it with `aria-describedby`.
-- [ ] Pass the Eye frame and Eye center hints from `App`.
-- [ ] Add a test to `tests/App.test.tsx` checking the Eye frame field is described by its hint.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Change the size grid in `App` to `grid-cols-1 sm:grid-cols-2`, and check the color and size rows at 360 px width. _(Checked with Playwright at 360 px: width and height stack, no horizontal overflow, color rows and the Save buttons fit.)_
+- [x] Add `hint?: string` to `ColorFieldProps`, render it under the field and link it with `aria-describedby`. _(The hint sits under the label; both the hex text input and the swatch point to it.)_
+- [x] Pass the Eye frame and Eye center hints from `App`.
+- [x] Add a test to `tests/App.test.tsx` checking the Eye frame field is described by its hint. _(Covers Eye center too. 51 tests pass.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 7: CI and documentation
 
@@ -221,6 +221,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 6 to stack the size fields on mobile and add hints to the eye color fields.
+Implement Phase 7 to add the CI workflow, README and AGENTS.md.
 
-QR codes copied straight to the clipboard thanks to [Codely](https://codely.com) AI tooling. 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Pocket-sized QR codes, copied and explained, thanks to [Codely](https://codely.com) AI tooling. 📱 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
