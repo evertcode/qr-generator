@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T20:32:25Z"
+last_implementation_at: "2026-10-05T22:24:57Z"
 has_completed_all_phases: "false"
 ---
 
@@ -104,8 +104,10 @@ Make the QR generator robust and maintainable: validate user input (logo file an
   - counts multibyte UTF-8 characters by bytes, not by length
 - `tests/utils/copyQrToClipboard.test.ts`
   - returns `copied` and writes a PNG `ClipboardItem`
-  - returns `unsupported` when `ClipboardItem` or `navigator.clipboard.write` is missing
+  - returns `unsupported` when `ClipboardItem` is missing
+  - returns `unsupported` when `navigator.clipboard.write` is missing
   - returns `failed` when the clipboard write rejects
+  - returns `failed` when the QR code cannot be rendered as PNG
 
 ### UI text copies
 
@@ -179,12 +181,12 @@ Let users choose the error correction level and stop them from generating a QR t
 
 Add a "Copy image" action next to the download button that copies the QR as PNG and announces the result.
 
-- [ ] Create `src/utils/copyQrToClipboard.ts` using `qrCode.getRawData('png')` and `navigator.clipboard.write([new ClipboardItem(...)])`, returning a `CopyResult`. Add `CopyResult` to `src/types/qr.ts`.
-- [ ] Add the "Copy image" button in `App`, disabled under the same conditions as the download button.
-- [ ] Add a polite `aria-live` status region that shows the copy messages and clears after a few seconds.
-- [ ] Create `tests/utils/copyQrToClipboard.test.ts` and add the Phase 5 case to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/utils/copyQrToClipboard.ts` using `qrCode.getRawData('png')` and `navigator.clipboard.write([new ClipboardItem(...)])`, returning a `CopyResult`. Add `CopyResult` to `src/types/qr.ts`. _(The `ClipboardItem` receives the pending PNG promise instead of an awaited blob, so Safari keeps the write tied to the click. A `null` PNG returns `failed`.)_
+- [x] Add the "Copy image" button in `App`, disabled under the same conditions as the download button. _(Outlined secondary style next to "Save as". Copy and download share a `flushQrCode` helper so both export the latest edits.)_
+- [x] Add a polite `aria-live` status region that shows the copy messages and clears after a few seconds. _(`<p role="status">` always rendered, cleared after 4 s. Checked in Chromium with real clipboard permissions: a 300×300 `image/png` lands on the clipboard and the message clears.)_
+- [x] Create `tests/utils/copyQrToClipboard.test.ts` and add the Phase 5 case to `tests/App.test.tsx`. _(Extra cases: `unsupported` split into missing `ClipboardItem` and missing `clipboard.write`, plus `failed` when the PNG cannot be rendered. The App case finds the message by text because the size `<output>` also has the implicit `status` role. 50 tests pass.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 6: Mobile layout and field hints
 
@@ -219,6 +221,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 5 to copy the QR image to the clipboard.
+Implement Phase 6 to stack the size fields on mobile and add hints to the eye color fields.
 
-Quality shipped one tested slice at a time by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).
+QR codes copied straight to the clipboard thanks to [Codely](https://codely.com) AI tooling. 📋 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

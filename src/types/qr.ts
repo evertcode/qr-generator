@@ -13,3 +13,5 @@ export interface UseQrCodeResult {
 export type LogoValidationError = 'unsupported-type' | 'too-large'
 export type LogoValidationResult = { ok: true } | { ok: false; reason: LogoValidationError }
 export type LogoUploadError = LogoValidationError | 'unreadable'
+
+export type CopyResult = 'copied' | 'unsupported' | 'failed'

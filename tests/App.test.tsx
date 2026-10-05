@@ -4,13 +4,17 @@ import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
 
-const qrDouble = vi.hoisted(() => ({ update: vi.fn() }))
+const qrDouble = vi.hoisted(() => ({
+  update: vi.fn(),
+  getRawData: vi.fn(async () => new Blob(['png'], { type: 'image/png' }))
+}))
 
 // jsdom has no canvas, so the QR library is replaced with a no-op double
 vi.mock('qr-code-styling', () => ({
   default: class {
     append = vi.fn()
     update = qrDouble.update
+    getRawData = qrDouble.getRawData
     download = vi.fn()
   }
 }))
@@ -160,5 +164,19 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'remove' }))
     expect(screen.queryByText(hint)).not.toBeInTheDocument()
+  })
+
+  it('announces the copy result in the live region', async () => {
+    const user = userEvent.setup()
+    const write = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('ClipboardItem', class {})
+    // userEvent.setup() installs its own clipboard stub, so it is replaced afterwards
+    Object.defineProperty(navigator, 'clipboard', { value: { write }, configurable: true })
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Copy image' }))
+
+    expect(await screen.findByText('Copied to clipboard')).toHaveAttribute('role', 'status')
+    expect(write).toHaveBeenCalledOnce()
   })
 })

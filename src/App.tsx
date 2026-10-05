@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react'
+import { useEffect, useState, ChangeEvent } from 'react'
 import {
   DrawType,
   TypeNumber,
@@ -27,7 +27,8 @@ import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { focusRing } from './styles/focusRing'
 import { validateLogoFile } from './utils/validateLogoFile'
 import { exceedsQrCapacity } from './utils/qrCapacity'
-import { LogoUploadError, QrColorTarget, QrSizeDimension } from './types/qr'
+import { copyQrToClipboard } from './utils/copyQrToClipboard'
+import { CopyResult, LogoUploadError, QrColorTarget, QrSizeDimension } from './types/qr'
 import defaultLogo from '../assets/logo.svg'
 
 import './App.css'
@@ -41,6 +42,13 @@ const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
   'too-large': 'That image is over 1 MB. Try a smaller one.',
   unreadable: "We couldn't read that file. Try another one."
 }
+
+const COPY_MESSAGES: Record<CopyResult, string> = {
+  copied: 'Copied to clipboard',
+  unsupported: "Your browser can't copy images. Download it instead.",
+  failed: "Couldn't copy the image. Try again."
+}
+const COPY_STATUS_DURATION_MS = 4000
 
 const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
@@ -87,6 +95,7 @@ function App () {
 
   const [imageName, setImageName] = useState<string>('evertcode mascot')
   const [logoError, setLogoError] = useState<LogoUploadError>()
+  const [copyResult, setCopyResult] = useState<CopyResult>()
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
   const debouncedOptions = useDebouncedValue(options, QR_UPDATE_DELAY_MS)
   const { containerRef, qrCode } = useQrCode(debouncedOptions)
@@ -169,13 +178,29 @@ function App () {
     setLogoError(undefined)
   }
 
+  useEffect(() => {
+    if (!copyResult) return
+    const timeout = setTimeout(() => setCopyResult(undefined), COPY_STATUS_DURATION_MS)
+    return () => clearTimeout(timeout)
+  }, [copyResult])
+
+  // Flush pending edits so a quick click never exports a stale code
+  const flushQrCode = () => {
+    qrCode.update(options)
+  }
+
   const onDownload = () => {
     if (!canSave) return
-    // Flush pending edits so a quick click never saves a stale code
-    qrCode.update(options)
+    flushQrCode()
     qrCode.download({
       extension: fileExtension
     })
+  }
+
+  const onCopy = async () => {
+    if (!canSave) return
+    flushQrCode()
+    setCopyResult(await copyQrToClipboard(qrCode))
   }
 
   const onChangeColor = (target: QrColorTarget) => (color: string) => {
@@ -290,16 +315,29 @@ function App () {
                   fileExtension={fileExtension}
                   onExtensionChange={onExtensionChange}
                 />
-                <button
-                  type='button'
-                  className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
-                  onClick={onDownload}
-                  disabled={!canSave}
-                >
-                  Save as {fileExtension.toUpperCase()}
-                  <span aria-hidden='true'>↓</span>
-                </button>
+                <div className='flex flex-wrap gap-2'>
+                  <button
+                    type='button'
+                    className={`inline-flex items-center h-10 px-5 border border-ink text-ink font-medium hover:bg-rule disabled:border-rule disabled:text-muted disabled:hover:bg-transparent disabled:cursor-not-allowed ${focusRing}`}
+                    onClick={onCopy}
+                    disabled={!canSave}
+                  >
+                    Copy image
+                  </button>
+                  <button
+                    type='button'
+                    className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
+                    onClick={onDownload}
+                    disabled={!canSave}
+                  >
+                    Save as {fileExtension.toUpperCase()}
+                    <span aria-hidden='true'>↓</span>
+                  </button>
+                </div>
               </div>
+              <p role='status' className={`min-h-5 text-sm ${copyResult === 'copied' ? 'text-moss' : 'text-red-700'}`}>
+                {copyResult && COPY_MESSAGES[copyResult]}
+              </p>
             </Section>
           </div>
         </div>
