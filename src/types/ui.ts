@@ -38,6 +38,7 @@ export interface InputFileProps {
   imageName: string
   onChangeImage: InputChangeHandler
   onRemoveImage: () => void
+  error?: string
 }
 
 export interface FormatPickerProps {

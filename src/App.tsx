@@ -24,7 +24,8 @@ import Footer from './components/Footer'
 import { useQrCode } from './hooks/useQrCode'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { focusRing } from './styles/focusRing'
-import { QrColorTarget, QrSizeDimension } from './types/qr'
+import { validateLogoFile } from './utils/validateLogoFile'
+import { LogoUploadError, QrColorTarget, QrSizeDimension } from './types/qr'
 import defaultLogo from '../assets/logo.svg'
 
 import './App.css'
@@ -32,6 +33,12 @@ import './App.css'
 const SIZE_MIN = 100
 const SIZE_MAX = 1000
 const QR_UPDATE_DELAY_MS = 150
+
+const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
+  'unsupported-type': 'Use a PNG, JPEG, SVG or WebP image.',
+  'too-large': 'That image is over 1 MB. Try a smaller one.',
+  unreadable: "We couldn't read that file. Try another one."
+}
 
 function App () {
   const [options, setOptions] = useState<Options>({
@@ -70,6 +77,7 @@ function App () {
   })
 
   const [imageName, setImageName] = useState<string>('evertcode mascot')
+  const [logoError, setLogoError] = useState<LogoUploadError>()
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
   const debouncedOptions = useDebouncedValue(options, QR_UPDATE_DELAY_MS)
   const { containerRef, qrCode } = useQrCode(debouncedOptions)
@@ -97,29 +105,33 @@ function App () {
   const onChangeImage = (event: ChangeEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement
     const file = target.files?.item(0)
+    target.value = ''
 
-    const reader = new FileReader()
+    if (!file) return
 
-    if (file) {
-      reader.readAsDataURL(file)
-      setImageName(file.name)
-
-      reader.onload = () => {
-        setOptions((opts) => ({
-          ...opts,
-          image: reader.result as string
-        }))
-      }
-
-      reader.onerror = () => {
-        setOptions((opts) => ({
-          ...opts,
-          image: ''
-        }))
-      }
+    const validation = validateLogoFile(file)
+    if (!validation.ok) {
+      setLogoError(validation.reason)
+      return
     }
 
-    target.value = ''
+    // The previous logo stays in place until the new one is read successfully
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      setOptions((opts) => ({
+        ...opts,
+        image: reader.result as string
+      }))
+      setImageName(file.name)
+      setLogoError(undefined)
+    }
+
+    reader.onerror = () => {
+      setLogoError('unreadable')
+    }
+
+    reader.readAsDataURL(file)
   }
 
   const onRemoveImage = () => {
@@ -127,6 +139,7 @@ function App () {
       ...opts,
       image: ''
     }))
+    setLogoError(undefined)
   }
 
   const onDownload = () => {
@@ -231,6 +244,7 @@ function App () {
                 imageName={imageName}
                 onChangeImage={onChangeImage}
                 onRemoveImage={onRemoveImage}
+                error={logoError && LOGO_ERROR_MESSAGES[logoError]}
               />
             </Section>
 

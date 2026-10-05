@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:52:26Z"
+last_implementation_at: "2026-10-05T19:54:48Z"
 has_completed_all_phases: "false"
 ---
 
@@ -86,6 +86,7 @@ Make the QR generator robust and maintainable: validate user input (logo file an
   - shows an error and keeps the previous logo when uploading an unsupported file type (Phase 3)
   - shows an error and keeps the previous logo when uploading a file over 1 MB (Phase 3)
   - shows an error when the file cannot be read (Phase 3)
+  - replaces the logo with a valid upload (Phase 3)
   - selects `Q` as the default error correction level (Phase 4)
   - shows the capacity error and disables download when the text exceeds the selected level capacity (Phase 4)
   - shows the logo hint when a logo is set and the level is `L` or `M` (Phase 4)
@@ -152,13 +153,13 @@ Extract the QR lifecycle out of `App`, create the instance once, debounce update
 
 Reject unsupported or oversized logo files and show readable, accessible errors instead of failing silently.
 
-- [ ] Create `src/utils/validateLogoFile.ts` with `LogoValidationResult` and `LogoValidationError` types in `src/types/qr.ts`.
-- [ ] Narrow the file input `accept` attribute to the supported MIME types.
-- [ ] In `App`, validate before reading the file; on failure keep the previous logo and set the error message. On `reader.onerror`, keep the previous logo and show the read error. Clear the error on a successful upload or removal.
-- [ ] Add `error?: string` to `InputFileProps` and render it in [`InputFile`](../../../src/components/InputFile.tsx) with `role="alert"`, matching the error style of [`Input`](../../../src/components/Input.tsx).
-- [ ] Create `tests/utils/validateLogoFile.test.ts` and add the Phase 3 cases to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/utils/validateLogoFile.ts` with `LogoValidationResult` and `LogoValidationError` types in `src/types/qr.ts`. _(Also exports `LOGO_ACCEPTED_TYPES` and `LOGO_MAX_BYTES`, and adds `LogoUploadError = LogoValidationError | 'unreadable'` to map every error to its copy in `App`.)_
+- [x] Narrow the file input `accept` attribute to the supported MIME types.
+- [x] In `App`, validate before reading the file; on failure keep the previous logo and set the error message. On `reader.onerror`, keep the previous logo and show the read error. Clear the error on a successful upload or removal. _(The file name is now set only after a successful read, so a failed upload no longer shows a new name next to the old logo.)_
+- [x] Add `error?: string` to `InputFileProps` and render it in [`InputFile`](../../../src/components/InputFile.tsx) with `role="alert"`, matching the error style of [`Input`](../../../src/components/Input.tsx). _(The add/change buttons point to the error with `aria-describedby`.)_
+- [x] Create `tests/utils/validateLogoFile.test.ts` and add the Phase 3 cases to `tests/App.test.tsx`. _(Added an extra happy path case, "replaces the logo with a valid upload". Upload tests use `userEvent.setup({ applyAccept: false })` because the input `accept` filter would otherwise drop rejected files before they reach the app. 33 tests pass.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 4: Error correction selector and text capacity
 
@@ -217,6 +218,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 3 to validate the uploaded logo and show accessible errors.
+Implement Phase 4 to add the error correction selector and the text capacity check.
 
 Quality shipped one tested slice at a time by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).
