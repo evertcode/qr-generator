@@ -9,6 +9,16 @@ created_by:
     name: "Claude Opus"
     version: "5.5"
     reasoning_effort: "low"
+
+implemented_by:
+  tool: "Claude Code"
+  model:
+    name: "Claude Opus"
+    version: "5.5"
+    reasoning_effort: "low"
+
+last_implementation_at: "2026-10-05T19:49:00Z"
+has_completed_all_phases: "false"
 ---
 
 # App quality improvements
@@ -61,8 +71,10 @@ Make the QR generator robust and maintainable: validate user input (logo file an
 - `tests/utils/hexColor.test.ts`
   - normalizes `#rgb` shorthand to `#rrggbb`
   - accepts a valid `#rrggbb` value
+  - accepts values without the leading `#`
+  - ignores surrounding whitespace
   - is case insensitive and returns lowercase
-  - returns `null` for invalid values (empty, missing `#`, wrong length, non hex chars)
+  - returns `null` for invalid values (empty, wrong length, non hex chars, color names)
 - `tests/hooks/useDebouncedValue.test.ts`
   - returns the initial value immediately
   - emits the new value after the delay
@@ -116,13 +128,13 @@ Make the QR generator robust and maintainable: validate user input (logo file an
 
 Add Vitest and Testing Library so the project has a runnable test command, and cover the existing hex color utility as the first suite.
 
-- [ ] Install `vitest`, `jsdom`, `@testing-library/react`, `@testing-library/user-event` and `@testing-library/jest-dom` as dev dependencies (versions compatible with React 18 and Vite 8).
-- [ ] Configure Vitest (`test` block in [`vite.config.mjs`](../../../vite.config.mjs) or a `vitest.config.mjs`) with the `jsdom` environment and a setup file `tests/setup.ts` that loads `@testing-library/jest-dom`.
-- [ ] Add the `"test": "vitest run"` script to `package.json`.
-- [ ] Make `tsconfig.json` and ESLint cover the `tests/` folder.
-- [ ] Create `tests/utils/hexColor.test.ts` with the cases listed in the public contracts.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Install `vitest`, `jsdom`, `@testing-library/react`, `@testing-library/user-event` and `@testing-library/jest-dom` as dev dependencies (versions compatible with React 18 and Vite 8). _(`vitest@5.0.3`, `jsdom@30.1.2`, `@testing-library/react@16.3.3` plus its peer `@testing-library/dom@10.4.2`, `@testing-library/user-event@14.6.7`, `@testing-library/jest-dom@7.0.1`, pinned exact like the rest of the deps.)_
+- [x] Configure Vitest (`test` block in [`vite.config.mjs`](../../../vite.config.mjs) or a `vitest.config.mjs`) with the `jsdom` environment and a setup file `tests/setup.ts` that loads `@testing-library/jest-dom`. _(`test` block added to `vite.config.mjs` via `defineConfig` from `vitest/config`. The setup file also registers `cleanup` after each test, since Vitest globals are off.)_
+- [x] Add the `"test": "vitest run"` script to `package.json`.
+- [x] Make `tsconfig.json` and ESLint cover the `tests/` folder. _(ESLint already lints the whole repo; only `tsconfig.json` `include` needed `tests`.)_
+- [x] Create `tests/utils/hexColor.test.ts` with the cases listed in the public contracts. _(The util accepts values without `#` and trims whitespace, so the contract cases were adjusted; 14 tests pass.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 2: Refactor and performance
 
@@ -205,6 +217,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 1 to add the test tooling and the first test suite.
+Implement Phase 2 to extract the QR lifecycle into hooks, debounce updates and remove duplicated handlers.
 
 Quality shipped one tested slice at a time by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).
