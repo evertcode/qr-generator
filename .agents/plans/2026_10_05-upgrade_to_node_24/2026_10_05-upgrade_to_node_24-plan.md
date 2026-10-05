@@ -17,8 +17,8 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:02:25Z"
-has_completed_all_phases: "false"
+last_implementation_at: "2026-10-05T19:06:17Z"
+has_completed_all_phases: "true"
 ---
 
 # 🟢 Upgrade to Node 24
@@ -105,15 +105,15 @@ Upgrade Tailwind CSS to v3 with a config-only migration and confirm the UI looks
 
 Upgrade React to v18 and switch to the `createRoot` API.
 
-- [ ] Upgrade `react`, `react-dom` to the latest 18.x and `@types/react`, `@types/react-dom` to the latest 18.x.
-- [ ] Replace `ReactDOM.render` with `createRoot` from `react-dom/client` in `src/main.tsx`.
-- [ ] Check in the browser that the QR preview renders once (StrictMode double effects in development must not append two QR canvases).
-- [ ] Check in the browser that the `react-color` pickers in `ColorField` still open, change colors and close with `Escape` and outside click.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Upgrade `react`, `react-dom` to the latest 18.x and `@types/react`, `@types/react-dom` to the latest 18.x. _(`react@18.3.1`, `react-dom@18.3.1`, `@types/react@18.3.31`, `@types/react-dom@18.3.7`.)_
+- [x] Replace `ReactDOM.render` with `createRoot` from `react-dom/client` in `src/main.tsx`. _(Also throws a clear error if `#root` is missing, instead of a non-null assertion.)_
+- [x] Check in the browser that the QR preview renders once (StrictMode double effects in development must not append two QR canvases). _(One canvas after load and after size/content updates.)_
+- [x] Check in the browser that the `react-color` pickers in `ColorField` still open, change colors and close with `Escape` and outside click. _(All 3 pickers OK. React 18.3 logs a dev-only deprecation warning because `react-color` uses `defaultProps` in `Sketch` and `Checkboard`. It does not affect behavior, but `react-color` is unmaintained and would need replacing before a React 19 upgrade.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check`, `npm run lint` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ## ⏭️ Next step
 
-Implement **Phase 5: Upgrade React to v18**.
+All phases are completed. Optional follow-up outside this plan: replace `react-color` (unmaintained, uses `defaultProps`) before upgrading to React 19.
 
-Fresh paint, same colors, applied by 🐢 💨 🏎️ 🔧 🏁 🎨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Race finished on Node 24, trophy lifted by 🐢 💨 🏎️ 🔧 🏁 🎨 🏆 (Turbotuga™, [Codely](https://codely.com)’s mascot)
