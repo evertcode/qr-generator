@@ -16,7 +16,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T17:44:53Z"
+last_implementation_at: "2026-10-05T17:58:48Z"
 ---
 
 # 🎨 Mejora UI/UX del QR Code Generator
@@ -54,11 +54,11 @@ Mejorar la experiencia de uso del generador de QR sin cambiar el stack (React 17
 
 ### Fase 2 — Controles más usables
 
-- [ ] Ancho/alto como `type='number'` con `min`/`max` (p. ej. 100–1000) y slider `range` sincronizado; ignorar valores no numéricos.
-- [ ] Extraer un componente `ColorField` reutilizable que sustituya los 3 bloques duplicados: botón accesible (`button`, `aria-expanded`), muestra del color + valor hex, cierre con clic fuera y con `Escape`.
-- [ ] `InputFile`: `accept='image/*'`, mostrar miniatura/nombre del logo actual y botón **Quitar logo**.
-- [ ] Botón de descarga con el formato incluido en el texto (p. ej. "Descargar PNG") y `SelectExtension` integrado junto a él.
-- [ ] Verificar con `npm run type-check` y `npm run build`.
+- [x] Ancho/alto como `type='number'` con `min`/`max` (p. ej. 100–1000) y slider `range` sincronizado; ignorar valores no numéricos.
+- [x] Extraer un componente `ColorField` reutilizable que sustituya los 3 bloques duplicados: botón accesible (`button`, `aria-expanded`), muestra del color + valor hex, cierre con clic fuera y con `Escape`.
+- [x] `InputFile`: `accept='image/*'`, mostrar miniatura/nombre del logo actual y botón **Quitar logo**.
+- [x] Botón de descarga con el formato incluido en el texto (p. ej. "Descargar PNG") y `SelectExtension` integrado junto a él.
+- [x] Verificar con `npm run type-check` y `npm run build`. _(`type-check` ✅. El bundle se validó con la API de Vite porque `npm run build` sigue sin funcionar en Node 24. Se probó en el navegador: tamaño, `Escape`/clic fuera en los colores, subir y quitar logo, y el texto del botón de descarga.)_
 
 ### Fase 3 — Feedback, accesibilidad y pulido visual
 
@@ -72,6 +72,6 @@ Mejorar la experiencia de uso del generador de QR sin cambiar el stack (React 17
 
 ## ⏭️ Siguiente paso
 
-Implementar la **Fase 2 — Controles más usables**.
+Implementar la **Fase 3 — Feedback, accesibilidad y pulido visual**.
 
-Layout split in two thanks to [Codely](https://codely.com) 🐢 💨 🧩
+Controls tamed with [Codely](https://codely.com) 🐢 💨 🧩 🎛️

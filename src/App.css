@@ -12,3 +12,7 @@ body {
   max-width: 100%;
   height: auto;
 }
+
+.qr-range {
+  accent-color: #10b981;
+}
