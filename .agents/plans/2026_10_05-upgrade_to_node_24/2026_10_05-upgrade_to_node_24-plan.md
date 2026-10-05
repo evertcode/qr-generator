@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T18:50:48Z"
+last_implementation_at: "2026-10-05T18:52:40Z"
 has_completed_all_phases: "false"
 ---
 
@@ -70,13 +70,13 @@ Pin the Node version and upgrade Vite so `npm run dev` and `npm run build` work 
 Move to TypeScript 5 with modern compiler options and clean up the dependency groups.
 
 - [x] Upgrade `typescript` to the latest 5.x. _(Done in Phase 1.)_
-- [ ] Upgrade `@types/react`, `@types/react-dom` to their latest 17.x. _(`@types/node@24.19.1` already done in Phase 1.)_
-- [ ] Move `typescript` and every `@types/*` package from `dependencies` to `devDependencies`.
-- [ ] Remove `@types/jest` (there are no tests).
-- [ ] Update `tsconfig.json`: `target: "ES2020"`, `moduleResolution: "bundler"`, add `"types": ["vite/client"]` if not already covered by `src/vite-env.d.ts`.
-- [ ] Remove `src/types/images.d.ts` if `vite/client` already covers its asset declarations.
-- [ ] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check` and `npm run build`). Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Upgrade `@types/react`, `@types/react-dom` to their latest 17.x. _(`@types/react@17.0.93`, `@types/react-dom@17.0.26`.)_ _(`@types/node@24.19.1` already done in Phase 1.)_
+- [x] Move `typescript` and every `@types/*` package from `dependencies` to `devDependencies`.
+- [x] Remove `@types/jest` (there are no tests).
+- [x] Update `tsconfig.json`: `target: "ES2020"`, `moduleResolution: "bundler"`, add `"types": ["vite/client"]` if not already covered by `src/vite-env.d.ts`. _(Already covered by `src/vite-env.d.ts`, so no `types` entry was added. `typeRoots` was removed: it pointed to `src/types`, which no longer holds declaration packages.)_
+- [x] Remove `src/types/images.d.ts` if `vite/client` already covers its asset declarations. _(Removed: the only asset import is `assets/logo.svg`, declared by `vite/client`.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using the project's verification command (`npm run type-check` and `npm run build`). Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 3: Replace the linter with a TypeScript-aware one
 
@@ -114,6 +114,6 @@ Upgrade React to v18 and switch to the `createRoot` API.
 
 ## ⏭️ Next step
 
-Implement **Phase 2: Upgrade TypeScript and type packages**.
+Implement **Phase 3: Replace the linter with a TypeScript-aware one**.
 
-Vite engine swapped mid-race by 🐢 💨 🏎️ (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Types tightened at the pit stop by 🐢 💨 🏎️ 🔧 (Turbotuga™, [Codely](https://codely.com)’s mascot)
