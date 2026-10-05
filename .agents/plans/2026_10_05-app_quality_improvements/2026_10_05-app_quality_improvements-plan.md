@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-05T19:49:00Z"
+last_implementation_at: "2026-10-05T19:52:26Z"
 has_completed_all_phases: "false"
 ---
 
@@ -140,13 +140,13 @@ Add Vitest and Testing Library so the project has a runnable test command, and c
 
 Extract the QR lifecycle out of `App`, create the instance once, debounce updates and remove duplicated handlers, with no visible behavior change.
 
-- [ ] Create `src/hooks/useQrCode.ts` with a lazy `useState(() => new QRCodeStyling(options))`, appending to `containerRef` and calling `update` on options change.
-- [ ] Create `src/hooks/useDebouncedValue.ts` and pass debounced options to `useQrCode` (around 150 ms) so typing does not redraw on every keystroke.
-- [ ] Add `QrColorTarget` to `src/types/qr.ts` and replace the three color handlers with a single `onChangeColor(target)` factory. Merge the width and height handlers in the same way.
-- [ ] Replace the inline base64 default logo with an import of [`assets/logo.svg`](../../../assets/logo.svg) and check it still renders and downloads in all formats.
-- [ ] Create `tests/hooks/useDebouncedValue.test.ts` and `tests/App.test.tsx` with the base cases listed in the public contracts (mocking `qr-code-styling`).
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/hooks/useQrCode.ts` with a lazy `useState(() => new QRCodeStyling(options))`, appending to `containerRef` and calling `update` on options change. _(Returns `UseQrCodeResult`, declared in the new `src/types/qr.ts`.)_
+- [x] Create `src/hooks/useDebouncedValue.ts` and pass debounced options to `useQrCode` (around 150 ms) so typing does not redraw on every keystroke. _(`QR_UPDATE_DELAY_MS = 150`. `onDownload` calls `qrCode.update(options)` with the live options first, so saving right after typing never exports a stale code.)_
+- [x] Add `QrColorTarget` to `src/types/qr.ts` and replace the three color handlers with a single `onChangeColor(target)` factory. Merge the width and height handlers in the same way. _(`onChangeSize(dimension: QrSizeDimension)`; the color option key is derived with the template literal type `QrColorOptionKey = \`${QrColorTarget}Options\``.)_
+- [x] Replace the inline base64 default logo with an import of [`assets/logo.svg`](../../../assets/logo.svg) and check it still renders and downloads in all formats. _(The inline base64 was byte-identical to `assets/logo.svg`. Checked on the production build with Playwright: logo visible in the preview, SVG/PNG/JPEG/WebP downloads work, no console errors.)_
+- [x] Create `tests/hooks/useDebouncedValue.test.ts` and `tests/App.test.tsx` with the base cases listed in the public contracts (mocking `qr-code-styling`). _(20 tests pass in total.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 3: Logo validation
 
@@ -217,6 +217,6 @@ Add security headers to the Vercel deployment and fix the non-breaking dependenc
 
 ## ⏭️ Next step
 
-Implement Phase 2 to extract the QR lifecycle into hooks, debounce updates and remove duplicated handlers.
+Implement Phase 3 to validate the uploaded logo and show accessible errors.
 
 Quality shipped one tested slice at a time by 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).
