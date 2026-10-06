@@ -88,6 +88,15 @@ describe('toQrCodeOptions', () => {
     expect(options.backgroundOptions).toEqual({ color: 'rgba(0,0,0,0)' })
   })
 
+  it('maps the logo size, margin and hidden dots to the image options', () => {
+    const options = toQrCodeOptions({
+      ...DEFAULT_QR_DESIGN,
+      logo: { ...DEFAULT_QR_DESIGN.logo!, size: 0.25, margin: 6, hideBackgroundDots: false }
+    })
+
+    expect(options.imageOptions).toEqual({ imageSize: 0.25, margin: 6, hideBackgroundDots: false, crossOrigin: 'anonymous' })
+  })
+
   it('sends an empty image when there is no logo so a removed logo is cleared', () => {
     const options = toQrCodeOptions({ ...DEFAULT_QR_DESIGN, logo: null })
 

@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:50:27Z"
+last_implementation_at: "2026-10-06T02:53:17Z"
 has_completed_all_phases: "false"
 ---
 
@@ -63,7 +63,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - `margin: number` (Phase 3)
   - `logo: QrLogo | null`
   - `frame: QrFrame | null` (Phase 13)
-- `QrLogo { src: string; name: string; size: number; margin: number; hideBackgroundDots: boolean }` (`size`, `margin`, `hideBackgroundDots` exposed in Phase 6).
+- `QrLogo { src: string; name: string; size: number; margin: number; hideBackgroundDots: boolean }` and `QrLogoSettings = Omit<QrLogo, 'src' | 'name'>` (`size`, `margin`, `hideBackgroundDots` exposed in Phase 6).
 - `QrDesignAction`: discriminated union, one action per editable field (`set-content`, `set-size`, `set-error-correction`, `set-shape`, `set-fill`, `set-background`, `set-margin`, `set-logo`, `update-logo`, `remove-logo`, `apply-preset`, `set-frame`, `replace`, `reset`), extended phase by phase.
 - `QrContent` (Phase 7): `{ type: 'text'; text } | { type: 'wifi'; ssid; password; encryption: QrWifiEncryption; hidden: boolean } | { type: 'email'; to; subject; body } | { type: 'phone'; number } | { type: 'sms'; number; message } | { type: 'vcard'; firstName; lastName; phone; email; organization; url }`, `QrContentType = QrContent['type']`, `QrWifiEncryption = 'WPA' | 'WEP' | 'nopass'`.
 - `ScannabilityIssue = 'low-contrast' | 'inverted'` (Phase 4).
@@ -239,11 +239,11 @@ Allow linear and radial gradients on dots, eye frames, eye centers and backgroun
 
 Let users tune how the logo sits on the code.
 
-- [ ] Add an `update-logo` action and map `size` (10-50 %), `margin` (0-20 px) and `hideBackgroundDots` in `toQrCodeOptions`.
-- [ ] Show "Logo size", "Logo margin" and "Hide dots behind the logo" in the Logo section only when a logo is set.
-- [ ] Extend `toQrCodeOptions` tests; add "changes the logo size" and "hides the logo controls without a logo" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add an `update-logo` action and map `size` (10-50 %), `margin` (0-20 px) and `hideBackgroundDots` in `toQrCodeOptions`. _(`update-logo` takes `Partial<QrLogoSettings>` (new type, `Omit<QrLogo, 'src' | 'name'>`) and is ignored when there is no logo. The model keeps the size as a fraction (0.1-0.5) and the UI shows it as a percentage in steps of 5.)_
+- [x] Show "Logo size", "Logo margin" and "Hide dots behind the logo" in the Logo section only when a logo is set. _(Size and margin side by side, stacking on mobile, reusing `RangeField` and `CheckboxField`.)_
+- [x] Extend `toQrCodeOptions` tests; add "changes the logo size" and "hides the logo controls without a logo" to `tests/App.test.tsx`. _(Also reducer cases for `update-logo`. 100 tests pass. Checked in the browser: the logo grows and shrinks on the canvas and dots show behind it when not hidden.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 7: Content types
 
@@ -326,6 +326,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 6 to let users tune the logo size, margin and the dots behind it.
+Implement Phase 7 to build WiFi, email, phone, SMS and contact codes.
 
-The lighthouse now shines in gradients, thanks to [Codely](https://codely.com) AI tooling. 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+A mascot now sits at just the right size on the rainbow, thanks to [Codely](https://codely.com) AI tooling. 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

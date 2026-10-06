@@ -23,6 +23,9 @@ export function qrDesignReducer (state: QrDesign, action: QrDesignAction): QrDes
         ...state,
         logo: { ...(state.logo ?? DEFAULT_LOGO_SETTINGS), src: action.src, name: action.name }
       }
+    case 'update-logo':
+      // Settings only apply to an existing logo; there is nothing to tune without one
+      return state.logo ? { ...state, logo: { ...state.logo, ...action.settings } } : state
     case 'remove-logo':
       return { ...state, logo: null }
     case 'reset':

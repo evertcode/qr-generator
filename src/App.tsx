@@ -27,13 +27,16 @@ import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrFill, QrFillTarget, ScannabilityIssue } from './types/design'
+import { QrFill, QrFillTarget, QrLogoSettings, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
 const SIZE_MIN = 100
 const SIZE_MAX = 1000
 const MARGIN_MAX = 50
+const LOGO_SIZE_MIN_PERCENT = 10
+const LOGO_SIZE_MAX_PERCENT = 50
+const LOGO_MARGIN_MAX = 20
 const QR_UPDATE_DELAY_MS = 150
 
 const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
@@ -135,6 +138,10 @@ function App () {
     }
 
     reader.readAsDataURL(file)
+  }
+
+  const onLogoSettingsChange = (settings: Partial<QrLogoSettings>) => {
+    dispatch({ type: 'update-logo', settings })
   }
 
   const onRemoveImage = () => {
@@ -321,6 +328,38 @@ function App () {
                 onRemoveImage={onRemoveImage}
                 error={logoError && LOGO_ERROR_MESSAGES[logoError]}
               />
+              {design.logo && (
+                <>
+                  <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
+                    <RangeField
+                      id='qr-logo-size'
+                      label='Logo size'
+                      value={Math.round(design.logo.size * 100)}
+                      min={LOGO_SIZE_MIN_PERCENT}
+                      max={LOGO_SIZE_MAX_PERCENT}
+                      step={5}
+                      unit='%'
+                      onChange={(percent) => onLogoSettingsChange({ size: percent / 100 })}
+                    />
+                    <RangeField
+                      id='qr-logo-margin'
+                      label='Logo margin'
+                      value={design.logo.margin}
+                      min={0}
+                      max={LOGO_MARGIN_MAX}
+                      step={1}
+                      unit='px'
+                      onChange={(margin) => onLogoSettingsChange({ margin })}
+                    />
+                  </div>
+                  <CheckboxField
+                    id='qr-logo-hide-dots'
+                    label='Hide dots behind the logo'
+                    checked={design.logo.hideBackgroundDots}
+                    onChange={(hideBackgroundDots) => onLogoSettingsChange({ hideBackgroundDots })}
+                  />
+                </>
+              )}
               <ErrorCorrectionPicker
                 id='qr-error-correction'
                 label='Error correction'

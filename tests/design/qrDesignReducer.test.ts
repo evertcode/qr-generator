@@ -61,6 +61,18 @@ describe('qrDesignReducer', () => {
     expect(next.logo).toEqual({ src: 'data:image/png;base64,AA', name: 'brand.png', size: 0.4, margin: 0, hideBackgroundDots: true })
   })
 
+  it('updates the logo settings and keeps its image', () => {
+    const next = apply({ type: 'update-logo', settings: { size: 0.3, hideBackgroundDots: false } })
+
+    expect(next.logo).toEqual({ ...DEFAULT_QR_DESIGN.logo, size: 0.3, hideBackgroundDots: false })
+  })
+
+  it('ignores logo settings when there is no logo', () => {
+    const state = { ...DEFAULT_QR_DESIGN, logo: null }
+
+    expect(apply({ type: 'update-logo', settings: { size: 0.3 } }, state)).toBe(state)
+  })
+
   it('removes the logo without touching the other fields', () => {
     expect(apply({ type: 'remove-logo' })).toEqual({ ...DEFAULT_QR_DESIGN, logo: null })
   })

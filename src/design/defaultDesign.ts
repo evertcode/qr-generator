@@ -1,7 +1,7 @@
-import { QrDesign, QrLogo } from '../types/design'
+import { QrDesign, QrLogoSettings } from '../types/design'
 import defaultLogo from '../../assets/logo.svg'
 
-export const DEFAULT_LOGO_SETTINGS: Omit<QrLogo, 'src' | 'name'> = {
+export const DEFAULT_LOGO_SETTINGS: QrLogoSettings = {
   size: 0.4,
   margin: 0,
   hideBackgroundDots: true

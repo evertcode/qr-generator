@@ -33,6 +33,8 @@ export interface QrLogo {
   hideBackgroundDots: boolean
 }
 
+export type QrLogoSettings = Omit<QrLogo, 'src' | 'name'>
+
 export interface QrDesign {
   content: QrContent
   size: QrSize
@@ -69,5 +71,6 @@ export type QrDesignAction =
   | { type: 'set-background'; transparent: boolean }
   | { type: 'set-margin'; margin: number }
   | { type: 'set-logo'; src: string; name: string }
+  | { type: 'update-logo'; settings: Partial<QrLogoSettings> }
   | { type: 'remove-logo' }
   | { type: 'reset' }

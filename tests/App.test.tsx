@@ -310,4 +310,33 @@ describe('App', () => {
       expect(lastDotsOptions()).toEqual(expect.objectContaining({ color: '#222222', gradient: undefined }))
     })
   })
+
+  it('changes the logo size', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const size = screen.getByRole('spinbutton', { name: 'Logo size' })
+    expect(size).toHaveValue(40)
+
+    await user.clear(size)
+    await user.type(size, '25')
+    await user.click(screen.getByRole('checkbox', { name: 'Hide dots behind the logo' }))
+
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        imageOptions: expect.objectContaining({ imageSize: 0.25, hideBackgroundDots: false })
+      }))
+    })
+  })
+
+  it('hides the logo controls without a logo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'remove' }))
+
+    expect(screen.queryByRole('spinbutton', { name: 'Logo size' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton', { name: 'Logo margin' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: 'Hide dots behind the logo' })).not.toBeInTheDocument()
+  })
 })
