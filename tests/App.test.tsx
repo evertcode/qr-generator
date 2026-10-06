@@ -221,4 +221,37 @@ describe('App', () => {
       }))
     })
   })
+
+  it('disables JPEG with a transparent background', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const formats = screen.getByRole('group', { name: 'File format' })
+
+    await user.click(within(formats).getByRole('radio', { name: 'jpeg' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Transparent background' }))
+
+    expect(within(formats).getByRole('radio', { name: 'jpeg' })).toBeDisabled()
+    expect(within(formats).getByRole('radio', { name: 'png' })).toBeChecked()
+    expect(formats).toHaveAccessibleDescription("JPEG can't be transparent. Pick PNG, WebP or SVG.")
+    expect(screen.queryByLabelText('Background color')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Transparent background' }))
+
+    expect(within(formats).getByRole('radio', { name: 'jpeg' })).toBeEnabled()
+    expect(screen.getByLabelText('Background color')).toBeInTheDocument()
+  })
+
+  it('changes the margin', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const margin = screen.getByLabelText('Margin')
+    await user.clear(margin)
+    await user.type(margin, '16')
+
+    expect(margin).toHaveAccessibleDescription('Leave some margin so scanners can find the code.')
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({ margin: 16 }))
+    })
+  })
 })

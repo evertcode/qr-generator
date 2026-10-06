@@ -15,6 +15,11 @@ export interface QrShapeStyle<T extends string> {
   fill: QrFill
 }
 
+export interface QrBackground {
+  transparent: boolean
+  fill: QrFill
+}
+
 export interface QrLogo {
   src: string
   name: string
@@ -30,11 +35,13 @@ export interface QrDesign {
   dots: QrShapeStyle<QrShapeTypes['dots']>
   cornersSquare: QrShapeStyle<QrShapeTypes['cornersSquare']>
   cornersDot: QrShapeStyle<QrShapeTypes['cornersDot']>
+  background: QrBackground
+  margin: number
   logo: QrLogo | null
 }
 
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
-export type QrFillTarget = QrShapeTarget
+export type QrFillTarget = QrShapeTarget | 'background'
 
 export interface QrShapeTypes {
   dots: DotType
@@ -52,6 +59,8 @@ export type QrDesignAction =
   | { type: 'set-error-correction'; level: ErrorCorrectionLevel }
   | { type: 'set-fill'; target: QrFillTarget; fill: QrFill }
   | QrSetShapeAction
+  | { type: 'set-background'; transparent: boolean }
+  | { type: 'set-margin'; margin: number }
   | { type: 'set-logo'; src: string; name: string }
   | { type: 'remove-logo' }
   | { type: 'reset' }

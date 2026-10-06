@@ -9,6 +9,8 @@ import InputFile from './components/InputFile'
 import FormatPicker from './components/FormatPicker'
 import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
 import ShapePickers from './components/ShapePickers'
+import RangeField from './components/RangeField'
+import CheckboxField from './components/CheckboxField'
 import Section from './components/Section'
 import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
@@ -30,6 +32,7 @@ import './App.css'
 
 const SIZE_MIN = 100
 const SIZE_MAX = 1000
+const MARGIN_MAX = 50
 const QR_UPDATE_DELAY_MS = 150
 
 const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
@@ -50,6 +53,11 @@ const STATUS_DURATION_MS = 4000
 const EYE_FRAME_HINT = 'The outer square in each corner.'
 const EYE_CENTER_HINT = 'The dot inside each corner square.'
 
+const MARGIN_HINT = 'Leave some margin so scanners can find the code.'
+const JPEG_TRANSPARENCY_HINT = "JPEG can't be transparent. Pick PNG, WebP or SVG."
+const NO_DISABLED_EXTENSIONS: readonly FileExtension[] = []
+const TRANSPARENT_DISABLED_EXTENSIONS: readonly FileExtension[] = ['jpeg']
+
 const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
 const LOW_CORRECTION_LEVELS: readonly ErrorCorrectionLevel[] = ['L', 'M']
@@ -67,7 +75,7 @@ function App () {
   const { containerRef, qrCode } = useQrCode(qrOptions)
 
   const data = design.content.text
-  const { errorCorrectionLevel, size } = design
+  const { errorCorrectionLevel, size, background } = design
   const isDataEmpty = !data.trim()
   const isDataTooLong = exceedsQrCapacity(data, errorCorrectionLevel)
   const canSave = !isDataEmpty && !isDataTooLong
@@ -129,6 +137,15 @@ function App () {
     dispatch({ type: 'set-fill', target, fill: { kind: 'solid', color } })
   }
 
+  const onTransparentChange = (transparent: boolean) => {
+    dispatch({ type: 'set-background', transparent })
+    if (transparent && fileExtension === 'jpeg') setFileExtension('png')
+  }
+
+  const onMarginChange = (margin: number) => {
+    dispatch({ type: 'set-margin', margin })
+  }
+
   const onReset = () => {
     dispatch({ type: 'reset' })
     setLogoError(undefined)
@@ -170,7 +187,7 @@ function App () {
             className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
             <QrLabel content={data} width={size.width} height={size.height}>
-              <div className='qr-preview' ref={containerRef} />
+              <div className={`qr-preview ${background.transparent ? 'qr-preview--transparent' : ''}`} ref={containerRef} />
             </QrLabel>
             <div className='mt-3 flex justify-end'>
               <button type='button' onClick={onReset} className={`${textAction} text-muted hover:text-ink`}>
@@ -248,7 +265,35 @@ function App () {
               />
             </Section>
 
-            <Section number='05' title='Logo'>
+            <Section number='05' title='Background'>
+              <CheckboxField
+                id='qr-background-transparent'
+                label='Transparent background'
+                checked={background.transparent}
+                onChange={onTransparentChange}
+              />
+              {!background.transparent && (
+                <ColorField
+                  id='qr-background-color'
+                  label='Background color'
+                  color={background.fill.color}
+                  onChange={onChangeColor('background')}
+                />
+              )}
+              <RangeField
+                id='qr-margin'
+                label='Margin'
+                value={design.margin}
+                min={0}
+                max={MARGIN_MAX}
+                step={1}
+                unit='px'
+                hint={MARGIN_HINT}
+                onChange={onMarginChange}
+              />
+            </Section>
+
+            <Section number='06' title='Logo'>
               <InputFile
                 id='qr-logo'
                 label='Add a logo'
@@ -274,6 +319,8 @@ function App () {
                   label='File format'
                   fileExtension={fileExtension}
                   onExtensionChange={onExtensionChange}
+                  disabledExtensions={background.transparent ? TRANSPARENT_DISABLED_EXTENSIONS : NO_DISABLED_EXTENSIONS}
+                  hint={background.transparent ? JPEG_TRANSPARENCY_HINT : undefined}
                 />
                 <div className='flex flex-wrap gap-2'>
                   <button

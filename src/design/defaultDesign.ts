@@ -16,5 +16,7 @@ export const DEFAULT_QR_DESIGN: QrDesign = {
   dots: { type: 'rounded', fill: { kind: 'solid', color: INK } },
   cornersSquare: { type: 'extra-rounded', fill: { kind: 'solid', color: INK } },
   cornersDot: { type: 'dot', fill: { kind: 'solid', color: INK } },
+  background: { transparent: false, fill: { kind: 'solid', color: '#ffffff' } },
+  margin: 0,
   logo: { src: defaultLogo, name: 'evertcode mascot', ...DEFAULT_LOGO_SETTINGS }
 }

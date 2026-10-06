@@ -15,7 +15,7 @@ function OptionPicker<T extends string> ({ id, label, value, options, onChange, 
         {options.map((option) => (
           <label
             key={option.value}
-            className={hasIcons ? 'border border-ink cursor-pointer' : 'border-l border-ink first:border-l-0 cursor-pointer'}
+            className={`${hasIcons ? 'border border-ink' : 'border-l border-ink first:border-l-0'} ${option.disabled ? 'cursor-not-allowed text-muted' : 'cursor-pointer'}`}
           >
             <input
               id={`${id}-${option.value}`}
@@ -23,10 +23,11 @@ function OptionPicker<T extends string> ({ id, label, value, options, onChange, 
               name={id}
               value={option.value}
               checked={value === option.value}
+              disabled={option.disabled}
               onChange={() => onChange(option.value)}
               className='peer sr-only'
             />
-            <span className={`${hasIcons ? TILE : SEGMENT} hover:bg-rule peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-moss`}>
+            <span className={`${hasIcons ? TILE : SEGMENT} peer-enabled:hover:bg-rule peer-disabled:line-through peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-moss`}>
               {option.icon}
               {option.label}
             </span>

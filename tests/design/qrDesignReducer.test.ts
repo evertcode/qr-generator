@@ -35,6 +35,18 @@ describe('qrDesignReducer', () => {
     expect(next).toEqual({ ...DEFAULT_QR_DESIGN, dots: { ...DEFAULT_QR_DESIGN.dots, type: 'classy' } })
   })
 
+  it('sets the background fill and keeps it when toggling transparency', () => {
+    const fill = { kind: 'solid', color: '#f5f0e6' } as const
+    const colored = apply({ type: 'set-fill', target: 'background', fill })
+    const transparent = apply({ type: 'set-background', transparent: true }, colored)
+
+    expect(transparent.background).toEqual({ transparent: true, fill })
+  })
+
+  it('sets the margin without touching the other fields', () => {
+    expect(apply({ type: 'set-margin', margin: 20 })).toEqual({ ...DEFAULT_QR_DESIGN, margin: 20 })
+  })
+
   it('replaces the logo image and keeps its size settings', () => {
     const state = { ...DEFAULT_QR_DESIGN, logo: { ...DEFAULT_QR_DESIGN.logo!, size: 0.3 } }
     const next = apply({ type: 'set-logo', src: 'data:image/png;base64,AA', name: 'brand.png' }, state)

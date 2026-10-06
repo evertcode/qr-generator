@@ -12,6 +12,16 @@ body {
   height: auto;
 }
 
+.qr-preview--transparent canvas,
+.qr-preview--transparent svg {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e5e5e5 25%, transparent 25%, transparent 75%, #e5e5e5 75%),
+    linear-gradient(45deg, #e5e5e5 25%, transparent 25%, transparent 75%, #e5e5e5 75%);
+  background-position: 0 0, 8px 8px;
+  background-size: 16px 16px;
+}
+
 .qr-number::-webkit-outer-spin-button,
 .qr-number::-webkit-inner-spin-button {
   -webkit-appearance: none;

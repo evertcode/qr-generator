@@ -15,7 +15,8 @@ describe('toQrCodeOptions', () => {
       qrOptions: { typeNumber: 0, mode: 'Byte', errorCorrectionLevel: 'Q' },
       imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0, crossOrigin: 'anonymous' },
       dotsOptions: { color: '#222222', type: 'rounded' },
-      backgroundOptions: { color: '#fff' },
+      // Same white as before, now in the six digit form the color input needs
+      backgroundOptions: { color: '#ffffff' },
       cornersSquareOptions: { color: '#222222', type: 'extra-rounded' },
       cornersDotOptions: { color: '#222222', type: 'dot' }
     })
@@ -31,6 +32,26 @@ describe('toQrCodeOptions', () => {
     expect(options.dotsOptions).toEqual({ color: '#3f6212', type: 'square' })
     expect(options.cornersDotOptions).toEqual({ color: '#84cc16', type: 'square' })
     expect(options.cornersSquareOptions).toEqual({ color: '#222222', type: 'extra-rounded' })
+  })
+
+  it('maps the background color and margin', () => {
+    const options = toQrCodeOptions({
+      ...DEFAULT_QR_DESIGN,
+      background: { transparent: false, fill: { kind: 'solid', color: '#f5f0e6' } },
+      margin: 12
+    })
+
+    expect(options.backgroundOptions).toEqual({ color: '#f5f0e6' })
+    expect(options.margin).toBe(12)
+  })
+
+  it('maps a transparent background to a fully transparent color', () => {
+    const options = toQrCodeOptions({
+      ...DEFAULT_QR_DESIGN,
+      background: { ...DEFAULT_QR_DESIGN.background, transparent: true }
+    })
+
+    expect(options.backgroundOptions).toEqual({ color: 'rgba(0,0,0,0)' })
   })
 
   it('sends an empty image when there is no logo so a removed logo is cleared', () => {

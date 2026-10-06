@@ -2,6 +2,8 @@ import { Options } from 'qr-code-styling'
 import { QrDesign } from '../types/design'
 import { DEFAULT_LOGO_SETTINGS } from './defaultDesign'
 
+const TRANSPARENT = 'rgba(0,0,0,0)'
+
 export function toQrCodeOptions (design: QrDesign): Options {
   const logo = design.logo ?? DEFAULT_LOGO_SETTINGS
 
@@ -12,7 +14,7 @@ export function toQrCodeOptions (design: QrDesign): Options {
     data: design.content.text,
     // Always sent: `update` merges options, so a missing key would keep a removed logo
     image: design.logo?.src ?? '',
-    margin: 0,
+    margin: design.margin,
     qrOptions: {
       typeNumber: 0,
       mode: 'Byte',
@@ -29,7 +31,7 @@ export function toQrCodeOptions (design: QrDesign): Options {
       type: design.dots.type
     },
     backgroundOptions: {
-      color: '#fff'
+      color: design.background.transparent ? TRANSPARENT : design.background.fill.color
     },
     cornersSquareOptions: {
       color: design.cornersSquare.fill.color,

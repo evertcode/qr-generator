@@ -26,6 +26,19 @@ export interface SizeFieldProps {
   onChange: NumberChangeHandler
 }
 
+export interface RangeFieldProps extends SizeFieldProps {
+  step: number
+  unit: string
+  hint?: string
+}
+
+export interface CheckboxFieldProps {
+  id: string
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}
+
 export interface ColorFieldProps {
   id: string
   label: string
@@ -49,6 +62,8 @@ export interface FormatPickerProps {
   label: string
   fileExtension: FileExtension
   onExtensionChange: ExtensionChangeHandler
+  disabledExtensions?: readonly FileExtension[]
+  hint?: string
 }
 
 export interface ErrorCorrectionPickerProps {
@@ -63,6 +78,7 @@ export interface OptionPickerItem<T extends string> {
   value: T
   label: string
   icon?: ReactNode
+  disabled?: boolean
 }
 
 export interface OptionPickerProps<T extends string> {

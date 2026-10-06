@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:37:31Z"
+last_implementation_at: "2026-10-06T02:42:16Z"
 has_completed_all_phases: "false"
 ---
 
@@ -92,7 +92,8 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `OptionPicker<T extends string>` with `OptionPickerProps<T> { id; label; value: T; options: readonly OptionPickerItem<T>[]; onChange: (value: T) => void; hint?: string }`, `OptionPickerItem<T> { value: T; label: string; icon?: ReactNode }` (Phase 2). `FormatPicker` and `ErrorCorrectionPicker` become thin wrappers over it.
 - `ShapeIcon` (inline SVG thumbnails per shape) and `ShapePickers` with `ShapePickersProps { shapes: QrShapeTypes; onShapeChange: (change: QrSetShapeAction) => void }` (Phase 2).
 - `FillField` with `FillFieldProps { id; label; fill: QrFill; onChange: (fill: QrFill) => void; hint?: string }` (Phase 5; Phase 3 uses `ColorField` for the solid background).
-- `RangeField` with `RangeFieldProps { id; label; value; min; max; step; unit; onChange: NumberChangeHandler }` (Phase 3, reused in Phases 6 and 12).
+- `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
+- `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
 - `ContentTypeTabs` and one form per type: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` (Phase 7).
 - `PresetPicker` (Phase 8), `HistoryControls` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
 
@@ -204,13 +205,13 @@ Let users pick the shape of the dots, eye frames and eye centers, with visual th
 
 Expose the background color, a transparent background and the quiet zone margin.
 
-- [ ] Add `background` and `margin` to `QrDesign` (default `#ffffff`, not transparent, margin 0 to keep today's look) and map them in `toQrCodeOptions`.
-- [ ] Create `RangeField` (slider + number with unit) reusing the `SizeField` draft/blur pattern.
-- [ ] Add a "Background" section: background `ColorField`, "Transparent background" checkbox, margin `RangeField` (0-50 px) with the margin hint.
-- [ ] Disable the JPEG option with its hint when the background is transparent, and switch to PNG if JPEG was selected.
-- [ ] Extend `toQrCodeOptions` tests; add "disables JPEG with a transparent background" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add `background` and `margin` to `QrDesign` (default `#ffffff`, not transparent, margin 0 to keep today's look) and map them in `toQrCodeOptions`. _(`QrBackground { transparent, fill }`. The default white is now `#ffffff` instead of `#fff`, the six digit form the color input needs, so the default mapping test was updated. Transparent maps to `rgba(0,0,0,0)`. Actions: `set-fill` now also targets `background`, `set-background` toggles transparency keeping the fill, `set-margin`.)_
+- [x] Create `RangeField` (slider + number with unit) reusing the `SizeField` draft/blur pattern. _(`SizeField` is now a thin wrapper over `RangeField` with `step={10}` and `px`.)_
+- [x] Add a "Background" section: background `ColorField`, "Transparent background" checkbox, margin `RangeField` (0-50 px) with the margin hint. _(Added a reusable `CheckboxField`. The background color field hides while transparent, and the preview shows a checkerboard behind the code. Sections: 05 Background, 06 Logo.)_
+- [x] Disable the JPEG option with its hint when the background is transparent, and switch to PNG if JPEG was selected. _(`OptionPickerItem` gained `disabled`; `FormatPicker` gained `disabledExtensions` and `hint`.)_
+- [x] Extend `toQrCodeOptions` tests; add "disables JPEG with a transparent background" to `tests/App.test.tsx`. _(Also reducer cases for background and margin, and "changes the margin". 77 tests pass. Checked in the browser: PNG and WebP exports have alpha 0 corners, the SVG has no background rect, the margin shows in the export.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 4: Contrast warning
 
@@ -325,6 +326,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 3 to expose the background color, a transparent background and the quiet zone margin.
+Implement Phase 4 to warn users when their colors may stop the code from scanning.
 
-The bricks now come in every shape, thanks to [Codely](https://codely.com) AI tooling. 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Shaped bricks now float on any background, thanks to [Codely](https://codely.com) AI tooling. 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
