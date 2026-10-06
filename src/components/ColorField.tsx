@@ -3,7 +3,9 @@ import { ColorFieldProps } from '../types/ui'
 import { fieldBase, fieldInvalid, fieldLabel, fieldValid } from '../styles/field'
 import { normalizeHexColor } from '../utils/hexColor'
 
-function ColorField ({ id, label, color, onChange }: ColorFieldProps) {
+function ColorField ({ id, label, color, onChange, hint }: ColorFieldProps) {
+  const hintId = `${id}-hint`
+  const describedBy = hint ? hintId : undefined
   const [draft, setDraft] = useState<string>(color)
   const swatchColor = normalizeHexColor(color) ?? '#000000'
   const isDraftValid = normalizeHexColor(draft) !== null
@@ -32,16 +34,24 @@ function ColorField ({ id, label, color, onChange }: ColorFieldProps) {
 
   return (
     <div className='flex items-center justify-between gap-4'>
-      <label htmlFor={id} className={fieldLabel}>
-        {label}
-      </label>
-      <div className='flex items-center gap-3'>
+      <div className='min-w-0'>
+        <label htmlFor={id} className={fieldLabel}>
+          {label}
+        </label>
+        {hint && (
+          <p id={hintId} className='text-xs text-muted'>
+            {hint}
+          </p>
+        )}
+      </div>
+      <div className='flex shrink-0 items-center gap-3'>
         <input
           type='color'
           aria-label={`${label} swatch`}
           className='qr-swatch'
           value={swatchColor}
           onChange={onSwatchChange}
+          aria-describedby={describedBy}
         />
         <div className='w-24'>
           <input
@@ -55,6 +65,7 @@ function ColorField ({ id, label, color, onChange }: ColorFieldProps) {
             onChange={onDraftChange}
             onBlur={onDraftBlur}
             aria-invalid={!isDraftValid}
+            aria-describedby={describedBy}
           />
         </div>
       </div>

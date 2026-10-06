@@ -1,11 +1,14 @@
 import { useRef } from 'react'
 import { InputFileProps } from '../types/ui'
 import { focusRing } from '../styles/focusRing'
+import { LOGO_ACCEPTED_TYPES } from '../utils/validateLogoFile'
 
 const textAction = `rounded-sm text-sm font-medium underline underline-offset-4 decoration-1 hover:decoration-2 ${focusRing}`
 
-function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage }: InputFileProps) {
+function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage, error }: InputFileProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const errorId = `${id}-error`
+  const describedBy = error ? errorId : undefined
 
   const onOpenFileDialog = () => {
     inputRef.current?.click()
@@ -20,7 +23,7 @@ function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage 
             <span className='flex-1 min-w-0 truncate font-mono text-sm' title={imageName}>
               {imageName}
             </span>
-            <button type='button' onClick={onOpenFileDialog} className={`${textAction} text-moss`}>
+            <button type='button' onClick={onOpenFileDialog} aria-describedby={describedBy} className={`${textAction} text-moss`}>
               change
             </button>
             <span aria-hidden='true' className='text-muted'>·</span>
@@ -30,7 +33,7 @@ function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage 
           </div>
           )
         : (
-          <button type='button' onClick={onOpenFileDialog} className={`${textAction} inline-flex items-center gap-2 text-moss`}>
+          <button type='button' onClick={onOpenFileDialog} aria-describedby={describedBy} className={`${textAction} inline-flex items-center gap-2 text-moss`}>
             <span aria-hidden='true' className='font-mono no-underline'>+</span>
             {label}
           </button>
@@ -39,12 +42,17 @@ function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage 
         id={id}
         ref={inputRef}
         type='file'
-        accept='image/*'
+        accept={LOGO_ACCEPTED_TYPES.join(',')}
         onChange={onChangeImage}
         className='hidden'
         tabIndex={-1}
         aria-hidden='true'
       />
+      {error && (
+        <p id={errorId} role='alert' className='mt-2 text-sm text-red-700'>
+          {error}
+        </p>
+      )}
     </div>
   )
 }
