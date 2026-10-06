@@ -57,7 +57,7 @@ describe('App', () => {
   it('renders with the default text and logo', () => {
     render(<App />)
 
-    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://example.com')
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
   })
 
@@ -212,7 +212,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Reset design' }))
 
     // The content editor remounts on reset to clear its per-tab drafts
-    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://example.com')
     expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
     expect(screen.getByText('Design reset')).toHaveAttribute('role', 'status')
@@ -475,7 +475,7 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByText('This link has an invalid design. Showing the default one.')).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://example.com')
   })
 
   it('copies the share link', async () => {

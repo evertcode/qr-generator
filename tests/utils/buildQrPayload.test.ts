@@ -4,7 +4,7 @@ import { EMPTY_CONTENT } from '../../src/design/emptyContent'
 
 describe('buildQrPayload', () => {
   it('returns plain text unchanged', () => {
-    expect(buildQrPayload({ type: 'text', text: 'https://github.com/evertcode' })).toBe('https://github.com/evertcode')
+    expect(buildQrPayload({ type: 'text', text: 'https://example.com' })).toBe('https://example.com')
   })
 
   it('builds a WPA WiFi code with a hidden network', () => {

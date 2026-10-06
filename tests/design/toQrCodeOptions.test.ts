@@ -9,7 +9,7 @@ describe('toQrCodeOptions', () => {
       width: 300,
       height: 300,
       type: 'canvas',
-      data: 'https://github.com/evertcode',
+      data: 'https://example.com',
       image: defaultLogo,
       margin: 0,
       qrOptions: { typeNumber: 0, mode: 'Byte', errorCorrectionLevel: 'Q' },

@@ -12,7 +12,7 @@ const INK = '#222222'
 export const DEFAULT_FRAME: QrFrame = { text: 'Scan me', color: INK, textColor: '#ffffff' }
 
 export const DEFAULT_QR_DESIGN: QrDesign = {
-  content: { type: 'text', text: 'https://github.com/evertcode' },
+  content: { type: 'text', text: 'https://example.com' },
   size: { width: 300, height: 300 },
   errorCorrectionLevel: 'Q',
   dots: { type: 'rounded', fill: { kind: 'solid', color: INK } },
