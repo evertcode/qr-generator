@@ -9,6 +9,7 @@ import InputFile from './components/InputFile'
 import FormatPicker from './components/FormatPicker'
 import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
 import ShapePickers from './components/ShapePickers'
+import PresetPicker from './components/PresetPicker'
 import RangeField from './components/RangeField'
 import CheckboxField from './components/CheckboxField'
 import Section from './components/Section'
@@ -28,8 +29,9 @@ import { validateQrContent } from './utils/validateQrContent'
 import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
+import { QR_STYLE_PRESETS } from './design/presets'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrContent, QrFill, QrFillTarget, QrLogoSettings, ScannabilityIssue } from './types/design'
+import { QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -162,6 +164,10 @@ function App () {
     dispatch({ type: 'set-margin', margin })
   }
 
+  const onApplyPreset = (preset: QrStylePreset) => {
+    dispatch({ type: 'apply-preset', style: preset.style })
+  }
+
   const onReset = () => {
     dispatch({ type: 'reset' })
     setResetCount((count) => count + 1)
@@ -258,14 +264,18 @@ function App () {
               </p>
             </Section>
 
-            <Section number='03' title='Shape'>
+            <Section number='03' title='Presets'>
+              <PresetPicker presets={QR_STYLE_PRESETS} onApply={onApplyPreset} />
+            </Section>
+
+            <Section number='04' title='Shape'>
               <ShapePickers
                 shapes={{ dots: design.dots.type, cornersSquare: design.cornersSquare.type, cornersDot: design.cornersDot.type }}
                 onShapeChange={dispatch}
               />
             </Section>
 
-            <Section number='04' title='Ink'>
+            <Section number='05' title='Ink'>
               <FillField
                 id='qr-dots-color'
                 label='Dots'
@@ -288,7 +298,7 @@ function App () {
               />
             </Section>
 
-            <Section number='05' title='Background'>
+            <Section number='06' title='Background'>
               <CheckboxField
                 id='qr-background-transparent'
                 label='Transparent background'
@@ -317,7 +327,7 @@ function App () {
               />
             </Section>
 
-            <Section number='06' title='Logo'>
+            <Section number='07' title='Logo'>
               <InputFile
                 id='qr-logo'
                 label='Add a logo'

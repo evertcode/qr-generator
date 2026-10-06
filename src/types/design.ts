@@ -60,6 +60,14 @@ export interface QrDesign {
   logo: QrLogo | null
 }
 
+export type QrDesignStyle = Pick<QrDesign, 'dots' | 'cornersSquare' | 'cornersDot' | 'background' | 'margin'>
+
+export interface QrStylePreset {
+  id: string
+  name: string
+  style: QrDesignStyle
+}
+
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
 export type ScannabilityIssue = 'low-contrast' | 'inverted'
 
@@ -86,4 +94,5 @@ export type QrDesignAction =
   | { type: 'set-logo'; src: string; name: string }
   | { type: 'update-logo'; settings: Partial<QrLogoSettings> }
   | { type: 'remove-logo' }
+  | { type: 'apply-preset'; style: QrDesignStyle }
   | { type: 'reset' }

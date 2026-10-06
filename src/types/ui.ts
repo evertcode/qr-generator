@@ -1,6 +1,6 @@
 import { ChangeEvent, ReactNode } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
-import { QrContent, QrContentOf, QrContentType, QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes } from './design'
+import { QrContent, QrContentOf, QrContentType, QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes, QrStylePreset } from './design'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
@@ -128,6 +128,11 @@ export interface ContentEditorProps {
   content: QrContent
   onChange: (content: QrContent) => void
   capacityError?: string
+}
+
+export interface PresetPickerProps {
+  presets: readonly QrStylePreset[]
+  onApply: (preset: QrStylePreset) => void
 }
 
 export interface SectionProps {

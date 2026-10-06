@@ -28,6 +28,9 @@ export function qrDesignReducer (state: QrDesign, action: QrDesignAction): QrDes
       return state.logo ? { ...state, logo: { ...state.logo, ...action.settings } } : state
     case 'remove-logo':
       return { ...state, logo: null }
+    case 'apply-preset':
+      // Presets only restyle the code: content, size, logo and error correction stay as they are
+      return { ...state, ...action.style }
     case 'reset':
       return DEFAULT_QR_DESIGN
   }

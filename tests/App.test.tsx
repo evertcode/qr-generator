@@ -395,4 +395,25 @@ describe('App', () => {
     expect(wifi).toHaveFocus()
     expect(screen.getByRole('tabpanel', { name: 'WiFi' })).toBeInTheDocument()
   })
+
+  it('applies a preset and keeps the content', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'my link')
+    await user.click(screen.getByRole('button', { name: 'Dotted' }))
+
+    expect(field).toHaveValue('my link')
+    expect(within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Dots' })).toBeChecked()
+    expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        data: 'my link',
+        margin: 16,
+        dotsOptions: expect.objectContaining({ type: 'dots', color: '#1e293b' })
+      }))
+    })
+  })
 })

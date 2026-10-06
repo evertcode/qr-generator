@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:59:30Z"
+last_implementation_at: "2026-10-06T03:02:19Z"
 has_completed_all_phases: "false"
 ---
 
@@ -95,7 +95,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
 - `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
 - `ContentEditor` (`ContentEditorProps { content; onChange; capacityError? }`), `ContentTypeTabs` and one form per type in `src/components/content/`: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` with `ContentFormProps<T>` (Phase 7). `InputProps.type?: InputType` (Phase 7).
-- `PresetPicker` (Phase 8), `HistoryControls` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
+- `PresetPicker` with `PresetPickerProps { presets: readonly QrStylePreset[]; onApply: (preset: QrStylePreset) => void }` (Phase 8), `HistoryControls` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
 
 ### Test suites
 
@@ -265,11 +265,11 @@ Build the encoded text for WiFi, email, phone, SMS and contact cards instead of 
 
 Offer ready-made looks that users can apply in one click and then tweak.
 
-- [ ] Create `src/design/presets.ts` with five presets (Classic, Soft, Dotted, Ocean, Sunset) that pass the scannability check.
-- [ ] Add the `apply-preset` action (style only) and a "Presets" section with `PresetPicker` showing a small swatch per preset.
-- [ ] Create `tests/design/presets.test.ts`; extend the reducer tests; add "applies a preset and keeps the content" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/design/presets.ts` with five presets (Classic, Soft, Dotted, Ocean, Sunset) that pass the scannability check. _(Classic and Dotted use pure solid inks, Soft a soft zinc, Ocean a blue linear gradient and Sunset a rust-to-rose radial gradient. All set a 16 px margin.)_
+- [x] Add the `apply-preset` action (style only) and a "Presets" section with `PresetPicker` showing a small swatch per preset. _(`apply-preset` carries the preset `style`. Presets are buttons, not a radio group, because a preset is an action and the design can drift from it after edits. The swatch paints the background fill (CSS gradient when needed) with the eye frame and dot shapes in their colors. Sections: 03 Presets, 04 Shape, 05 Ink, 06 Background, 07 Logo.)_
+- [x] Create `tests/design/presets.test.ts`; extend the reducer tests; add "applies a preset and keeps the content" to `tests/App.test.tsx`. _(Extra preset case: every preset keeps a margin. 133 tests pass. In the browser all five presets decode with jsQR with the default logo on, and none raises a contrast warning.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 9: Autosave
 
@@ -330,6 +330,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 8 to offer ready-made style presets.
+Implement Phase 9 to keep the last design between visits.
 
-Now the codes carry WiFi keys and business cards too, thanks to [Codely](https://codely.com) AI tooling. 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Five ready-made outfits now hang in the wardrobe, thanks to [Codely](https://codely.com) AI tooling. 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

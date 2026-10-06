@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { qrDesignReducer } from '../../src/design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from '../../src/design/defaultDesign'
+import { QR_STYLE_PRESETS } from '../../src/design/presets'
 import { QrDesign, QrDesignAction } from '../../src/types/design'
 
 const apply = (action: QrDesignAction, state: QrDesign = DEFAULT_QR_DESIGN) => qrDesignReducer(state, action)
@@ -75,6 +76,22 @@ describe('qrDesignReducer', () => {
 
   it('removes the logo without touching the other fields', () => {
     expect(apply({ type: 'remove-logo' })).toEqual({ ...DEFAULT_QR_DESIGN, logo: null })
+  })
+
+  it('applies a preset style and keeps content, size, logo and error correction', () => {
+    const state: QrDesign = {
+      ...DEFAULT_QR_DESIGN,
+      content: { type: 'text', text: 'mine' },
+      size: { width: 500, height: 400 },
+      errorCorrectionLevel: 'H'
+    }
+    const [ocean] = QR_STYLE_PRESETS.filter((preset) => preset.id === 'ocean')
+
+    const next = apply({ type: 'apply-preset', style: ocean.style }, state)
+
+    expect(next).toEqual({ ...state, ...ocean.style })
+    expect(next.content).toEqual({ type: 'text', text: 'mine' })
+    expect(next.logo).toBe(state.logo)
   })
 
   it('resets to the default design', () => {
