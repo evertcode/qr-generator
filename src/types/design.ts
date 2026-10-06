@@ -8,7 +8,20 @@ export type QrFill =
   | { kind: 'solid'; color: string }
   | { kind: 'gradient'; gradientType: QrGradientType; rotation: number; colors: [string, string] }
 
-export type QrContent = { type: 'text'; text: string }
+export type QrWifiEncryption = 'WPA' | 'WEP' | 'nopass'
+
+export type QrContent =
+  | { type: 'text'; text: string }
+  | { type: 'wifi'; ssid: string; password: string; encryption: QrWifiEncryption; hidden: boolean }
+  | { type: 'email'; to: string; subject: string; body: string }
+  | { type: 'phone'; number: string }
+  | { type: 'sms'; number: string; message: string }
+  | { type: 'vcard'; firstName: string; lastName: string; phone: string; email: string; organization: string; url: string }
+
+export type QrContentType = QrContent['type']
+export type QrContentOf<T extends QrContentType> = Extract<QrContent, { type: T }>
+export type QrContentDrafts = { [K in QrContentType]: QrContentOf<K> }
+export type QrContentError = 'empty-text' | 'missing-ssid' | 'missing-email' | 'missing-phone' | 'missing-name'
 
 export interface QrSize {
   width: number

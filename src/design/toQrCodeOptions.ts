@@ -1,6 +1,7 @@
 import { Gradient, Options } from 'qr-code-styling'
 import { QrDesign, QrFill } from '../types/design'
 import { DEFAULT_LOGO_SETTINGS } from './defaultDesign'
+import { buildQrPayload } from '../utils/buildQrPayload'
 
 const TRANSPARENT = 'rgba(0,0,0,0)'
 
@@ -33,7 +34,7 @@ export function toQrCodeOptions (design: QrDesign): Options {
     width: design.size.width,
     height: design.size.height,
     type: 'canvas',
-    data: design.content.text,
+    data: buildQrPayload(design.content),
     // Always sent: `update` merges options, so a missing key would keep a removed logo
     image: design.logo?.src ?? '',
     margin: design.margin,

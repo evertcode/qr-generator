@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:53:17Z"
+last_implementation_at: "2026-10-06T02:59:30Z"
 has_completed_all_phases: "false"
 ---
 
@@ -65,7 +65,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - `frame: QrFrame | null` (Phase 13)
 - `QrLogo { src: string; name: string; size: number; margin: number; hideBackgroundDots: boolean }` and `QrLogoSettings = Omit<QrLogo, 'src' | 'name'>` (`size`, `margin`, `hideBackgroundDots` exposed in Phase 6).
 - `QrDesignAction`: discriminated union, one action per editable field (`set-content`, `set-size`, `set-error-correction`, `set-shape`, `set-fill`, `set-background`, `set-margin`, `set-logo`, `update-logo`, `remove-logo`, `apply-preset`, `set-frame`, `replace`, `reset`), extended phase by phase.
-- `QrContent` (Phase 7): `{ type: 'text'; text } | { type: 'wifi'; ssid; password; encryption: QrWifiEncryption; hidden: boolean } | { type: 'email'; to; subject; body } | { type: 'phone'; number } | { type: 'sms'; number; message } | { type: 'vcard'; firstName; lastName; phone; email; organization; url }`, `QrContentType = QrContent['type']`, `QrWifiEncryption = 'WPA' | 'WEP' | 'nopass'`.
+- `QrContent` (Phase 7): `{ type: 'text'; text } | { type: 'wifi'; ssid; password; encryption: QrWifiEncryption; hidden: boolean } | { type: 'email'; to; subject; body } | { type: 'phone'; number } | { type: 'sms'; number; message } | { type: 'vcard'; firstName; lastName; phone; email; organization; url }`, `QrContentType = QrContent['type']`, `QrContentOf<T>`, `QrContentDrafts`, `QrContentError = 'empty-text' | 'missing-ssid' | 'missing-email' | 'missing-phone' | 'missing-name'`, `QrWifiEncryption = 'WPA' | 'WEP' | 'nopass'`.
 - `ScannabilityIssue = 'low-contrast' | 'inverted'` (Phase 4).
 - `QrStylePreset { id: string; name: string; style: QrDesignStyle }`, `QrDesignStyle = Pick<QrDesign, 'dots' | 'cornersSquare' | 'cornersDot' | 'background' | 'margin'>` (Phase 8).
 - `SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'` (Phase 9).
@@ -79,7 +79,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `toQrCodeOptions(design: QrDesign): Options` in `src/design/toQrCodeOptions.ts`.
 - `qrDesignReducer(state: QrDesign, action: QrDesignAction): QrDesign` in `src/design/qrDesignReducer.ts`.
 - `getContrastRatio(a: string, b: string): number` and `assessScannability(design: QrDesign): ScannabilityIssue[]` in `src/utils/contrast.ts` (Phase 4).
-- `buildQrPayload(content: QrContent): string` in `src/utils/buildQrPayload.ts` (Phase 7).
+- `buildQrPayload(content: QrContent): string` and `describeQrContent(content: QrContent): string` in `src/utils/buildQrPayload.ts`, `validateQrContent(content: QrContent): QrContentError | null` in `src/utils/validateQrContent.ts`, `EMPTY_CONTENT: QrContentDrafts` in `src/design/emptyContent.ts` (Phase 7).
 - `QR_STYLE_PRESETS: readonly QrStylePreset[]` in `src/design/presets.ts` (Phase 8).
 - `parseQrDesign(value: unknown): QrDesign | null`, `saveDesign(storage: Storage, design: QrDesign): SaveDesignResult`, `loadSavedDesign(storage: Storage): QrDesign | null` in `src/design/persistence.ts` (Phase 9). Stored under the `qr-design:v1` key as `{ version: 1, design }`.
 - `encodeDesignToHash(design: QrDesign): string` and `decodeDesignFromHash(hash: string): QrDesign | null` in `src/design/shareLink.ts` (Phase 10).
@@ -94,7 +94,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `FillField` with `FillFieldProps { id; label; fill: QrFill; onChange: (fill: QrFill) => void; hint?: string; defaultGradientEnd?: string }` (Phase 5; Phase 3 uses `ColorField` for the solid background). `OptionPickerProps.labelHidden?` (Phase 5).
 - `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
 - `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
-- `ContentTypeTabs` and one form per type: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` (Phase 7).
+- `ContentEditor` (`ContentEditorProps { content; onChange; capacityError? }`), `ContentTypeTabs` and one form per type in `src/components/content/`: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` with `ContentFormProps<T>` (Phase 7). `InputProps.type?: InputType` (Phase 7).
 - `PresetPicker` (Phase 8), `HistoryControls` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
 
 ### Test suites
@@ -132,6 +132,10 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - builds `tel:` stripping spaces
   - builds `SMSTO:<number>:<message>`
   - builds a vCard 3.0 with only the filled fields and escaped `; , \`
+- `tests/utils/validateQrContent.test.ts` (Phase 7)
+  - reports the missing required field of each empty content type
+  - treats whitespace as missing
+  - accepts a contact with only a last name
 - `tests/design/presets.test.ts` (Phase 8)
   - every preset passes `assessScannability` with no issues
   - preset ids are unique
@@ -249,13 +253,13 @@ Let users tune how the logo sits on the code.
 
 Build the encoded text for WiFi, email, phone, SMS and contact cards instead of asking users to know the formats.
 
-- [ ] Extend `QrContent` with all variants and create `src/utils/buildQrPayload.ts`.
-- [ ] Create `ContentTypeTabs` (accessible tabs) and the six content forms with their required field errors; keep the data of each type while switching tabs during the session.
-- [ ] Use `buildQrPayload` in `toQrCodeOptions`, in the capacity check and in the `QrLabel` caption (show the type and main field, e.g. "WiFi · Home").
-- [ ] Disable copy and save while required fields are missing.
-- [ ] Create `tests/utils/buildQrPayload.test.ts`; add "builds a WiFi code", "shows a required field error" and "keeps the text when switching tabs" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Extend `QrContent` with all variants and create `src/utils/buildQrPayload.ts`. _(Also `describeQrContent` for the caption, `validateQrContent` in `src/utils/validateQrContent.ts` returning a `QrContentError`, and `EMPTY_CONTENT` in `src/design/emptyContent.ts`. vCard lines use CRLF as RFC 2426 requires. Lint caught a lost backslash in the escaping regexes while writing the file; fixed before testing.)_
+- [x] Create `ContentTypeTabs` (accessible tabs) and the six content forms with their required field errors; keep the data of each type while switching tabs during the session. _(A `ContentEditor` component composes the tabs and forms (in `src/components/content/`) and keeps per-tab drafts in a ref; "Reset design" remounts it to clear them. Tabs follow the WAI-ARIA pattern with arrow keys, Home and End. `Input` gained `type` (`text`, `email`, `tel`, `url`). WiFi security labels: "WPA/WPA2", "WEP", "None"; the password field hides for open networks. Section renamed to "01 Content".)_
+- [x] Use `buildQrPayload` in `toQrCodeOptions`, in the capacity check and in the `QrLabel` caption (show the type and main field, e.g. "WiFi · Home"). _(The text field keeps showing the capacity error itself; the other forms show it below the form.)_
+- [x] Disable copy and save while required fields are missing.
+- [x] Create `tests/utils/buildQrPayload.test.ts`; add "builds a WiFi code", "shows a required field error" and "keeps the text when switching tabs" to `tests/App.test.tsx`. _(Also `tests/utils/validateQrContent.test.ts` and an arrow key tabs case. Existing tests now query the text field by role, since the tab panel is also labelled "Link or text"; the reset test re-queries it after the editor remounts. 124 tests pass. In the browser the real WiFi, vCard and email codes were decoded with jsQR and match the expected payloads, escapes included.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 8: Style presets
 
@@ -326,6 +330,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 7 to build WiFi, email, phone, SMS and contact codes.
+Implement Phase 8 to offer ready-made style presets.
 
-A mascot now sits at just the right size on the rainbow, thanks to [Codely](https://codely.com) AI tooling. 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Now the codes carry WiFi keys and business cards too, thanks to [Codely](https://codely.com) AI tooling. 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

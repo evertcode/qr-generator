@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useState, ChangeEvent } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 
 import Header from './components/Header'
-import Input from './components/Input'
+import ContentEditor from './components/ContentEditor'
 import SizeField from './components/SizeField'
 import FillField from './components/FillField'
 import InputFile from './components/InputFile'
@@ -23,11 +23,13 @@ import { validateLogoFile } from './utils/validateLogoFile'
 import { exceedsQrCapacity } from './utils/qrCapacity'
 import { copyQrToClipboard } from './utils/copyQrToClipboard'
 import { assessScannability } from './utils/contrast'
+import { buildQrPayload, describeQrContent } from './utils/buildQrPayload'
+import { validateQrContent } from './utils/validateQrContent'
 import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrFill, QrFillTarget, QrLogoSettings, ScannabilityIssue } from './types/design'
+import { QrContent, QrFill, QrFillTarget, QrLogoSettings, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -69,7 +71,6 @@ const SCANNABILITY_MESSAGES: Record<ScannabilityIssue, string> = {
   inverted: "Light dots on a dark background don't scan on every phone. Make the dots darker than the background."
 }
 
-const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
 const LOW_CORRECTION_LEVELS: readonly ErrorCorrectionLevel[] = ['L', 'M']
 
@@ -80,24 +81,23 @@ function App () {
   const [design, dispatch] = useReducer(qrDesignReducer, DEFAULT_QR_DESIGN)
   const [logoError, setLogoError] = useState<LogoUploadError>()
   const [status, setStatus] = useState<AppStatus>()
+  // Remounts the content editor on reset so its per-tab drafts are cleared too
+  const [resetCount, setResetCount] = useState(0)
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
   const debouncedDesign = useDebouncedValue(design, QR_UPDATE_DELAY_MS)
   const qrOptions = useMemo(() => toQrCodeOptions(debouncedDesign), [debouncedDesign])
   const { containerRef, qrCode } = useQrCode(qrOptions)
 
-  const data = design.content.text
+  const payload = buildQrPayload(design.content)
   const { errorCorrectionLevel, size, background } = design
-  const isDataEmpty = !data.trim()
-  const isDataTooLong = exceedsQrCapacity(data, errorCorrectionLevel)
-  const canSave = !isDataEmpty && !isDataTooLong
-  const dataError = isDataEmpty
-    ? EMPTY_DATA_MESSAGE
-    : isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
+  const isDataTooLong = exceedsQrCapacity(payload, errorCorrectionLevel)
+  const canSave = validateQrContent(design.content) === null && !isDataTooLong
+  const capacityError = isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
   const scannabilityIssues = assessScannability(design)
   const showLogoHint = design.logo !== null && LOW_CORRECTION_LEVELS.includes(errorCorrectionLevel)
 
-  const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: 'set-content', content: { type: 'text', text: event.target.value } })
+  const onContentChange = (content: QrContent) => {
+    dispatch({ type: 'set-content', content })
   }
 
   const onChangeSize = (dimension: QrSizeDimension) => (value: number) => {
@@ -164,6 +164,7 @@ function App () {
 
   const onReset = () => {
     dispatch({ type: 'reset' })
+    setResetCount((count) => count + 1)
     setLogoError(undefined)
     setStatus('design-reset')
   }
@@ -202,7 +203,7 @@ function App () {
             aria-label='QR code preview'
             className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
-            <QrLabel content={data} width={size.width} height={size.height}>
+            <QrLabel content={describeQrContent(design.content)} width={size.width} height={size.height}>
               <div className={`qr-preview ${background.transparent ? 'qr-preview--transparent' : ''}`} ref={containerRef} />
             </QrLabel>
             <div aria-live='polite' className='mt-3 space-y-1'>
@@ -221,14 +222,12 @@ function App () {
           </section>
 
           <div className='py-8 space-y-8 border-t border-rule lg:border-t-0 lg:border-l lg:pl-10'>
-            <Section number='01' title='Link'>
-              <Input
-                id='qr-data'
-                label='Link or text'
-                placeholder='https://your-site.com'
-                value={data}
-                onChange={onDataChange}
-                error={dataError}
+            <Section number='01' title='Content'>
+              <ContentEditor
+                key={resetCount}
+                content={design.content}
+                onChange={onContentChange}
+                capacityError={capacityError}
               />
             </Section>
 

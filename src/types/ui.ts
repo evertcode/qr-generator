@@ -1,12 +1,14 @@
 import { ChangeEvent, ReactNode } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
-import { QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes } from './design'
+import { QrContent, QrContentOf, QrContentType, QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes } from './design'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
 export type NumberChangeHandler = (value: number) => void
 export type ColorChangeHandler = (color: string) => void
 export type ErrorCorrectionLevelChangeHandler = (level: ErrorCorrectionLevel) => void
+
+export type InputType = 'text' | 'email' | 'tel' | 'url'
 
 export interface InputProps {
   id: string
@@ -15,6 +17,7 @@ export interface InputProps {
   value: string | number | undefined
   onChange: InputChangeHandler
   error?: string
+  type?: InputType
 }
 
 export interface SizeFieldProps {
@@ -107,6 +110,24 @@ export interface FillFieldProps {
   onChange: (fill: QrFill) => void
   hint?: string
   defaultGradientEnd?: string
+}
+
+export interface ContentTypeTabsProps {
+  id: string
+  value: QrContentType
+  onChange: (type: QrContentType) => void
+}
+
+export interface ContentFormProps<T extends QrContentType> {
+  content: QrContentOf<T>
+  onChange: (content: QrContentOf<T>) => void
+  error?: string
+}
+
+export interface ContentEditorProps {
+  content: QrContent
+  onChange: (content: QrContent) => void
+  capacityError?: string
 }
 
 export interface SectionProps {

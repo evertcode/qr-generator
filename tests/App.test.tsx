@@ -45,7 +45,7 @@ describe('App', () => {
   it('renders with the default text and logo', () => {
     render(<App />)
 
-    expect(screen.getByLabelText('Link or text')).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
   })
 
@@ -53,7 +53,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.type(field, 'hello qr')
 
@@ -64,7 +64,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.clear(screen.getByLabelText('Link or text'))
+    await user.clear(screen.getByRole('textbox', { name: 'Link or text' }))
 
     expect(screen.getByRole('button', { name: /save as/i })).toBeDisabled()
     expect(screen.getByText(/nothing to encode yet/i)).toBeInTheDocument()
@@ -121,7 +121,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.click(field)
     await user.paste(TOO_LONG_FOR_Q)
@@ -139,7 +139,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.click(field)
     await user.paste(TOO_LONG_FOR_Q)
@@ -191,7 +191,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.type(field, 'edited')
     await user.click(screen.getByRole('radio', { name: 'H' }))
@@ -199,7 +199,8 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Reset design' }))
 
-    expect(field).toHaveValue('https://github.com/evertcode')
+    // The content editor remounts on reset to clear its per-tab drafts
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
     expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
     expect(screen.getByText('Design reset')).toHaveAttribute('role', 'status')
@@ -338,5 +339,60 @@ describe('App', () => {
     expect(screen.queryByRole('spinbutton', { name: 'Logo size' })).not.toBeInTheDocument()
     expect(screen.queryByRole('spinbutton', { name: 'Logo margin' })).not.toBeInTheDocument()
     expect(screen.queryByRole('checkbox', { name: 'Hide dots behind the logo' })).not.toBeInTheDocument()
+  })
+
+  it('builds a WiFi code', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('tab', { name: 'WiFi' }))
+    await user.type(screen.getByRole('textbox', { name: 'Network name' }), 'Home')
+    await user.type(screen.getByRole('textbox', { name: 'Password' }), 'secret')
+
+    expect(screen.getByRole('figure')).toHaveTextContent('WiFi · Home')
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: 'WIFI:T:WPA;S:Home;P:secret;;' }))
+    })
+  })
+
+  it('shows a required field error and disables saving', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('tab', { name: 'WiFi' }))
+
+    expect(screen.getByText('Add a network name.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /save as/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Copy image' })).toBeDisabled()
+  })
+
+  it('keeps the text when switching tabs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'kept')
+    await user.click(screen.getByRole('tab', { name: 'Email' }))
+    await user.type(screen.getByRole('textbox', { name: 'To' }), 'hi@site.com')
+    await user.click(screen.getByRole('tab', { name: 'Link or text' }))
+
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('kept')
+
+    await user.click(screen.getByRole('tab', { name: 'Email' }))
+    expect(screen.getByRole('textbox', { name: 'To' })).toHaveValue('hi@site.com')
+  })
+
+  it('moves between content tabs with the arrow keys', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    screen.getByRole('tab', { name: 'Link or text' }).focus()
+    await user.keyboard('{ArrowRight}')
+
+    const wifi = screen.getByRole('tab', { name: 'WiFi' })
+    expect(wifi).toHaveAttribute('aria-selected', 'true')
+    expect(wifi).toHaveFocus()
+    expect(screen.getByRole('tabpanel', { name: 'WiFi' })).toBeInTheDocument()
   })
 })
