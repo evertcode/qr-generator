@@ -3,6 +3,8 @@ import { normalizeHexColor } from './hexColor'
 
 // Scanners need clearly darker dots than background; 4:1 leaves room for print and screen glare
 const MIN_SCANNABLE_CONTRAST = 4
+// A frame needs a quiet zone between it and the modules, relative to the code size
+const MIN_FRAMED_MARGIN_RATIO = 0.03
 
 const channelLuminance = (channel: number) => {
   const value = channel / 255
@@ -24,8 +26,12 @@ export function getContrastRatio (a: string, b: string): number {
 
 const fillColors = (fill: QrFill): string[] => fill.kind === 'solid' ? [fill.color] : fill.colors
 
+const frameTouchesCode = (design: QrDesign) =>
+  design.frame !== null && design.margin < Math.max(design.size.width, design.size.height) * MIN_FRAMED_MARGIN_RATIO
+
 export function assessScannability (design: QrDesign): ScannabilityIssue[] {
-  if (design.background.transparent) return []
+  const frameIssues: ScannabilityIssue[] = frameTouchesCode(design) ? ['frame-touches-code'] : []
+  if (design.background.transparent) return frameIssues
 
   // Every ink color is checked against every background color, so gradients are judged at their weakest point
   const backgrounds = fillColors(design.background.fill)
@@ -40,5 +46,5 @@ export function assessScannability (design: QrDesign): ScannabilityIssue[] {
     issues.push('inverted')
   }
 
-  return issues
+  return [...issues, ...frameIssues]
 }

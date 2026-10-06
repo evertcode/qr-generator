@@ -74,6 +74,22 @@ describe('assessScannability', () => {
     expect(assessScannability(design)).toEqual(['low-contrast'])
   })
 
+  it('reports a frame that touches the code', () => {
+    const framed: QrDesign = { ...DEFAULT_QR_DESIGN, frame: { text: 'Scan me', color: '#222222', textColor: '#ffffff' } }
+
+    expect(assessScannability({ ...framed, margin: 0 })).toEqual(['frame-touches-code'])
+    expect(assessScannability({ ...framed, margin: 9 })).toEqual([])
+  })
+
+  it('reports a frame touching the code even with a transparent background', () => {
+    const framed: QrDesign = {
+      ...withColors('#222222', '#ffffff', true),
+      frame: { text: 'Scan me', color: '#222222', textColor: '#ffffff' }
+    }
+
+    expect(assessScannability(framed)).toEqual(['frame-touches-code'])
+  })
+
   it('reports nothing for a transparent background', () => {
     expect(assessScannability(withColors('#eeeeee', '#ffffff', true))).toEqual([])
   })

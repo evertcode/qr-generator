@@ -587,4 +587,28 @@ describe('App', () => {
     finish()
     expect(await screen.findByRole('button', { name: /save as svg/i })).toBeEnabled()
   })
+
+  it('adds a frame with text', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByTestId('qr-frame')).toHaveAttribute('data-framed', 'false')
+
+    await user.click(screen.getByRole('checkbox', { name: 'Add a frame' }))
+    const text = screen.getByRole('textbox', { name: 'Frame text' })
+    await user.clear(text)
+    await user.type(text, 'Menu inside')
+
+    expect(screen.getByTestId('qr-frame')).toHaveTextContent('Menu inside')
+    expect(text).toHaveAttribute('maxLength', '24')
+    expect(screen.getByText('The frame touches the code. Add some margin so it still scans.')).toBeInTheDocument()
+
+    const margin = screen.getByRole('spinbutton', { name: 'Margin' })
+    await user.clear(margin)
+    await user.type(margin, '16')
+    expect(screen.queryByText(/the frame touches the code/i)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Add a frame' }))
+    expect(screen.getByTestId('qr-frame')).toHaveAttribute('data-framed', 'false')
+  })
 })

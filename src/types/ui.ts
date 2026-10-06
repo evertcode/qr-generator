@@ -1,6 +1,6 @@
 import { ChangeEvent, ReactNode } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
-import { QrContent, QrContentOf, QrContentType, QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes, QrStylePreset } from './design'
+import { QrContent, QrContentOf, QrContentType, QrFill, QrFrame, QrSetShapeAction, QrShapeTarget, QrShapeTypes, QrStylePreset } from './design'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
@@ -18,6 +18,7 @@ export interface InputProps {
   onChange: InputChangeHandler
   error?: string
   type?: InputType
+  maxLength?: number
 }
 
 export interface SizeFieldProps {
@@ -145,6 +146,18 @@ export interface HistoryControlsProps {
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
+}
+
+export interface FrameFieldsProps {
+  frame: QrFrame | null
+  onChange: (frame: QrFrame | null) => void
+}
+
+export interface FramedPreviewProps {
+  frame: QrFrame | null
+  width: number
+  height: number
+  children: ReactNode
 }
 
 export interface SectionProps {

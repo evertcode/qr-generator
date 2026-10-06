@@ -33,6 +33,20 @@ export interface QrShapeStyle<T extends string> {
   fill: QrFill
 }
 
+export interface QrFrame {
+  text: string
+  color: string
+  textColor: string
+}
+
+export interface FrameLayout {
+  border: number
+  band: number
+  fontSize: number
+  width: number
+  height: number
+}
+
 export interface QrBackground {
   transparent: boolean
   fill: QrFill
@@ -58,6 +72,7 @@ export interface QrDesign {
   background: QrBackground
   margin: number
   logo: QrLogo | null
+  frame: QrFrame | null
 }
 
 export type QrDesignStyle = Pick<QrDesign, 'dots' | 'cornersSquare' | 'cornersDot' | 'background' | 'margin'>
@@ -91,12 +106,13 @@ export interface QrExportOptions {
   extension: FileExtension
   fileName: string
   size: QrExportSize | 'preview'
+  frame: QrFrame | null
 }
 
 export type SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'
 
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
-export type ScannabilityIssue = 'low-contrast' | 'inverted'
+export type ScannabilityIssue = 'low-contrast' | 'inverted' | 'frame-touches-code'
 
 export type QrFillTarget = QrShapeTarget | 'background'
 
@@ -122,5 +138,6 @@ export type QrDesignAction =
   | { type: 'update-logo'; settings: Partial<QrLogoSettings> }
   | { type: 'remove-logo' }
   | { type: 'apply-preset'; style: QrDesignStyle }
+  | { type: 'set-frame'; frame: QrFrame | null }
   | { type: 'replace'; design: QrDesign }
   | { type: 'reset' }

@@ -111,6 +111,19 @@ describe('parseQrDesign', () => {
     expect(parsed).not.toHaveProperty('extra')
   })
 
+  it('accepts designs saved before frames existed', () => {
+    const { frame, ...withoutFrame } = valid
+
+    expect(frame).toBeNull()
+    expect(parseQrDesign(withoutFrame)).toEqual(customDesign)
+  })
+
+  it('keeps a valid frame', () => {
+    const framed = { ...valid, frame: { text: 'Scan me', color: '#222', textColor: '#FFFFFF' } }
+
+    expect(parseQrDesign(framed)?.frame).toEqual({ text: 'Scan me', color: '#222222', textColor: '#ffffff' })
+  })
+
   it('normalizes colors', () => {
     const parsed = parseQrDesign({ ...valid, cornersDot: { type: 'dot', fill: { kind: 'solid', color: '#ABC' } } })
 
@@ -124,6 +137,7 @@ describe('parseQrDesign', () => {
     ['an unknown content type', { content: { type: 'bitcoin', address: 'x' } }],
     ['a remote logo URL', { logo: { ...valid.logo, src: 'https://example.com/logo.png' } }],
     ['a logo size over the limit', { logo: { ...valid.logo, size: 0.9 } }],
+    ['a frame text over 24 characters', { frame: { text: 'x'.repeat(25), color: '#000000', textColor: '#ffffff' } }],
     ['a gradient with one color', { dots: { type: 'square', fill: { kind: 'gradient', gradientType: 'linear', rotation: 0, colors: ['#000000'] } } }]
   ])('rejects %s', (_, override) => {
     expect(parseQrDesign({ ...valid, ...override })).toBeNull()

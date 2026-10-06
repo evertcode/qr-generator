@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.test.{ts,tsx}'],
-    setupFiles: ['tests/setup.ts']
+    setupFiles: ['tests/setup.ts'],
+    // App tests drive many user events; the 5 s default timed out under load while each takes about 300 ms alone
+    testTimeout: 15000
   }
 })

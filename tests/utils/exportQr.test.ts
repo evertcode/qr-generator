@@ -68,7 +68,7 @@ describe('exportQr', () => {
   })
 
   it('exports at the chosen size from a separate instance', async () => {
-    await exportQr(previewOptions, { extension: 'png', fileName: 'menu', size: 4096 })
+    await exportQr(previewOptions, { extension: 'png', fileName: 'menu', size: 4096, frame: null })
 
     expect(qrDouble.created).toHaveLength(1)
     expect(qrDouble.created[0]).toMatchObject({ width: 4096, height: 4096 })
@@ -76,7 +76,7 @@ describe('exportQr', () => {
   })
 
   it('downloads with the sanitized file name', async () => {
-    await exportQr(previewOptions, { extension: 'svg', fileName: ' menu.svg ', size: 'preview' })
+    await exportQr(previewOptions, { extension: 'svg', fileName: ' menu.svg ', size: 'preview', frame: null })
 
     expect(qrDouble.download).toHaveBeenCalledWith({ name: 'menu', extension: 'svg' })
   })

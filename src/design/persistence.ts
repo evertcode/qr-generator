@@ -4,6 +4,7 @@ import {
   QrContent,
   QrDesign,
   QrFill,
+  QrFrame,
   QrLogo,
   QrShapeStyle,
   QrWifiEncryption,
@@ -12,6 +13,7 @@ import {
 import { normalizeHexColor } from '../utils/hexColor'
 import { DEFAULT_QR_DESIGN } from './defaultDesign'
 import {
+  FRAME_TEXT_MAX_LENGTH,
   LOGO_MARGIN_MAX,
   LOGO_NAME_MAX_LENGTH,
   LOGO_SIZE_MAX,
@@ -152,6 +154,15 @@ const parseLogo = (value: unknown): QrLogo | null => {
   }
 }
 
+// Designs saved before frames existed have no `frame` key and simply have no frame
+const parseFrame = (value: unknown): QrFrame | null => {
+  if (value === undefined || value === null) return null
+  const frame = fields(value)
+  const text = string(frame.text)
+  if (text.length > FRAME_TEXT_MAX_LENGTH) throw new InvalidDesign()
+  return { text, color: color(frame.color), textColor: color(frame.textColor) }
+}
+
 const parseBackground = (value: unknown): QrBackground => {
   const background = fields(value)
   return { transparent: boolean(background.transparent), fill: parseFill(background.fill) }
@@ -172,7 +183,8 @@ export function parseQrDesign (value: unknown): QrDesign | null {
       cornersDot: parseShape(design.cornersDot, CORNER_DOT_TYPES),
       background: parseBackground(design.background),
       margin: numberIn(design.margin, 0, MARGIN_MAX),
-      logo: parseLogo(design.logo)
+      logo: parseLogo(design.logo),
+      frame: parseFrame(design.frame)
     }
   } catch (error) {
     if (error instanceof InvalidDesign) return null

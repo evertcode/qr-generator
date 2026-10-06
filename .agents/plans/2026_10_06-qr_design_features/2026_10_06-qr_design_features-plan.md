@@ -17,8 +17,8 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T14:36:05Z"
-has_completed_all_phases: "false"
+last_implementation_at: "2026-10-06T14:55:54Z"
+has_completed_all_phases: "true"
 ---
 
 # QR design features
@@ -85,7 +85,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `encodeDesignToHash(design: QrDesign): string`, `decodeDesignFromHash(hash: string): QrDesign | null`, `hasSharedDesign(hash: string): boolean` and `isUploadedLogo(logo: QrLogo | null): boolean` in `src/design/shareLink.ts`; `resolveInitialDesign(storage: Storage | null, hash: string): InitialDesign` in `src/design/initialDesign.ts`, with `InitialDesign { design; source: 'link' | 'invalid-link' | 'storage' | 'default' }` (Phase 10).
 - `useDesignHistory(initial: QrDesign): DesignHistory` in `src/hooks/useDesignHistory.ts` (Phase 11).
 - `sanitizeFileName(name: string): string`, `scaleQrOptions(options: Options, size: QrExportSize | 'preview'): Options`, `createExportQr(options: Options, size: QrExportSize | 'preview'): QRCodeStyling` and `exportQr(options: Options, exportOptions: QrExportOptions): Promise<void>` in `src/utils/exportQr.ts` (Phase 12). `QrExportSizeChoice = 'preview' | `${QrExportSize}`` for the picker.
-- `composeFramedQr(qr: Blob, frame: QrFrame, extension: FileExtension): Promise<Blob>` in `src/utils/composeFramedQr.ts` (Phase 13).
+- `composeFramedQr(qr: Blob, frame: QrFrame, extension: FileExtension): Promise<Blob>` in `src/utils/composeFramedQr.ts`, `frameLayout(width, height): FrameLayout` in `src/design/frameLayout.ts`, `downloadBlob(blob: Blob, fileName: string): void` in `src/utils/downloadBlob.ts`, `DEFAULT_FRAME` (Phase 13).
 
 ### Components
 
@@ -95,6 +95,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
 - `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
 - `ContentEditor` (`ContentEditorProps { content; onChange; capacityError? }`), `ContentTypeTabs` and one form per type in `src/components/content/`: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` with `ContentFormProps<T>` (Phase 7). `InputProps.type?: InputType` (Phase 7).
+- `FramedPreview` (`FramedPreviewProps { frame; width; height; children }`) and `FrameFields` (`FrameFieldsProps { frame; onChange }`) (Phase 13).
 - `PresetPicker` with `PresetPickerProps { presets: readonly QrStylePreset[]; onApply: (preset: QrStylePreset) => void }` (Phase 8), `HistoryControls` with `HistoryControlsProps { canUndo; canRedo; onUndo; onRedo }` and `isTextEntry(target: EventTarget | null): boolean` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
 
 ### Test suites
@@ -186,7 +187,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - Phase 10: "Copy link", "Link copied", "Couldn't copy the link. Try again.", "Loaded the design from the link.", "Uploaded logos aren't included in links.", "This link has an invalid design. Showing the default one."
 - Phase 11: "Undo", "Redo".
 - Phase 12: "File name", "Export size", "Same as preview", "Preparing…", "Preparing your file…".
-- Phase 13: section "Frame"; "Add a frame", "Frame text" (default "Scan me"), "Frame color", "Text color".
+- Phase 13: section "Frame"; "Add a frame", "Frame text" (default "Scan me"), "Frame color", "Text color"; warning "The frame touches the code. Add some margin so it still scans."
 
 ## 🪜 Phases
 
@@ -328,17 +329,17 @@ Name the exported file and export at print resolution without enlarging the prev
 
 Add an optional frame with a short text like "Scan me", included in every export.
 
-- [ ] Add `frame` to `QrDesign` (default `null`), the `set-frame` action and its validation in `parseQrDesign`.
-- [ ] Create `src/utils/composeFramedQr.ts`: SVG output wraps the QR SVG in a framed SVG with a `<text>` label (escaped); raster outputs draw the QR and the frame on a canvas after `document.fonts.ready`.
-- [ ] Create `FrameFields` ("Add a frame", "Frame text" up to 24 characters, "Frame color", "Text color") in a "Frame" section, and render the same frame around the preview.
-- [ ] Use `composeFramedQr` in `exportQr` and `copyQrToClipboard` when a frame is set.
-- [ ] Create `tests/utils/composeFramedQr.test.ts`; add "adds a frame with text" to `tests/App.test.tsx`.
-- [ ] Check in the browser that the frame looks the same in the preview and in SVG, PNG, JPEG and WebP exports.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add `frame` to `QrDesign` (default `null`), the `set-frame` action and its validation in `parseQrDesign`. _(A missing `frame` key parses as no frame, so designs saved or shared before this phase keep loading. Frame text edits coalesce in the undo history.)_
+- [x] Create `src/utils/composeFramedQr.ts`: SVG output wraps the QR SVG in a framed SVG with a `<text>` label (escaped); raster outputs draw the QR and the frame on a canvas after `document.fonts.ready`. _(Both use one `frameLayout` (border 4 %, text band 16 % of the code, font 45 % of the band), so the frame scales with the export size. Raster output waits for `document.fonts.load` of the frame font. Framed downloads use a new `downloadBlob` helper, since the library cannot draw frames.)_
+- [x] Create `FrameFields` ("Add a frame", "Frame text" up to 24 characters, "Frame color", "Text color") in a "Frame" section, and render the same frame around the preview. _(Section "08 Frame"; `Input` gained `maxLength`. Found in the browser check: when `FramedPreview` returned a bare fragment without a frame, React reused the QR container node as the frame `div` on toggle and the library wiped React's children, so the band disappeared from the preview. The wrapper is now always rendered so the container node never moves; `tests/components/FramedPreview.test.tsx` checks the node identity. Added the `frame-touches-code` scannability warning: a frame with a margin under 3 % of the code can merge with the modules.)_
+- [x] Use `composeFramedQr` in `exportQr` and `copyQrToClipboard` when a frame is set. _(`QrExportOptions` gained `frame`; `copyQrToClipboard` takes an optional frame.)_
+- [x] Create `tests/utils/composeFramedQr.test.ts`; add "adds a frame with text" to `tests/App.test.tsx`. _(Also frame cases in the persistence and contrast suites. 223 tests pass. Raised Vitest `testTimeout` to 15 s: two App tests hit the 5 s default once under load while each takes about 300 ms alone.)_
+- [x] Check in the browser that the frame looks the same in the preview and in SVG, PNG, JPEG and WebP exports. _(All four exports and the clipboard copy are 324 x 360 with the frame, and all decode with jsQR; the SVG keeps the QR as a nested vector. The preview matches the PNG export and survives three on/off toggles and a preset change.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ## ⏭️ Next step
 
-Implement Phase 13 to add the call-to-action frame.
+All phases are complete. Open a pull request from `feature/qr-design-features` to `main` and let CI run.
 
-Rewound, polished and now printed poster-sized, thanks to [Codely](https://codely.com) AI tooling. 🖨️ ⏪ 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Framed, signed and ready to hang on the wall: the QR design studio is complete, thanks to [Codely](https://codely.com) AI tooling. 🏆 🖨️ ⏪ 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

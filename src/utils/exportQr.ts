@@ -1,5 +1,7 @@
 import QRCodeStyling, { Options } from 'qr-code-styling'
 import { QrExportOptions, QrExportSize } from '../types/design'
+import { composeFramedQr } from './composeFramedQr'
+import { downloadBlob } from './downloadBlob'
 
 export const DEFAULT_FILE_NAME = 'qr'
 const FILE_NAME_MAX_LENGTH = 100
@@ -42,6 +44,16 @@ export function scaleQrOptions (options: Options, size: QrExportSize | 'preview'
 export const createExportQr = (options: Options, size: QrExportSize | 'preview'): QRCodeStyling =>
   new QRCodeStyling(scaleQrOptions(options, size))
 
-export async function exportQr (options: Options, { extension, fileName, size }: QrExportOptions): Promise<void> {
-  await createExportQr(options, size).download({ name: sanitizeFileName(fileName), extension })
+export async function exportQr (options: Options, { extension, fileName, size, frame }: QrExportOptions): Promise<void> {
+  const qrCode = createExportQr(options, size)
+  const name = sanitizeFileName(fileName)
+  if (!frame) {
+    await qrCode.download({ name, extension })
+    return
+  }
+
+  // The library cannot draw a frame, so the raw image is composed and downloaded here
+  const raw = await qrCode.getRawData(extension)
+  if (!raw) throw new Error('The QR code could not be rendered')
+  downloadBlob(await composeFramedQr(raw, frame, extension), `${name}.${extension}`)
 }

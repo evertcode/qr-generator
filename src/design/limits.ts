@@ -7,3 +7,4 @@ export const LOGO_SIZE_MAX = 0.5
 export const LOGO_MARGIN_MAX = 20
 export const ROTATION_MAX = 360
 export const LOGO_NAME_MAX_LENGTH = 255
+export const FRAME_TEXT_MAX_LENGTH = 24

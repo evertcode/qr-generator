@@ -30,6 +30,8 @@ const coalesceKey = (action: QrDesignAction): string | null => {
       return `fill:${action.target}`
     case 'set-margin':
       return 'margin'
+    case 'set-frame':
+      return 'frame'
     case 'update-logo':
       return `logo:${Object.keys(action.settings).sort().join(',')}`
     default:

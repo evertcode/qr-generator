@@ -12,6 +12,8 @@ import ShapePickers from './components/ShapePickers'
 import PresetPicker from './components/PresetPicker'
 import ShareLinkButton from './components/ShareLinkButton'
 import HistoryControls from './components/HistoryControls'
+import FrameFields from './components/FrameFields'
+import FramedPreview from './components/FramedPreview'
 import RangeField from './components/RangeField'
 import CheckboxField from './components/CheckboxField'
 import Section from './components/Section'
@@ -42,7 +44,7 @@ import { encodeDesignToHash, isUploadedLogo } from './design/shareLink'
 import { LOGO_MARGIN_MAX, LOGO_SIZE_MAX, LOGO_SIZE_MIN, MARGIN_MAX, SIZE_MAX, SIZE_MIN } from './design/limits'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
 import { OptionPickerItem } from './types/ui'
-import { InitialDesignSource, QrExportSize, QrExportSizeChoice, QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
+import { InitialDesignSource, QrExportSize, QrExportSizeChoice, QrContent, QrFrame, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -102,7 +104,8 @@ const TRANSPARENT_DISABLED_EXTENSIONS: readonly FileExtension[] = ['jpeg']
 
 const SCANNABILITY_MESSAGES: Record<ScannabilityIssue, string> = {
   'low-contrast': 'Low contrast. Some phones may not scan this code.',
-  inverted: "Light dots on a dark background don't scan on every phone. Make the dots darker than the background."
+  inverted: "Light dots on a dark background don't scan on every phone. Make the dots darker than the background.",
+  'frame-touches-code': 'The frame touches the code. Add some margin so it still scans.'
 }
 
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
@@ -258,6 +261,10 @@ function App () {
     }
   }
 
+  const onFrameChange = (frame: QrFrame | null) => {
+    dispatch({ type: 'set-frame', frame })
+  }
+
   const onApplyPreset = (preset: QrStylePreset) => {
     dispatch({ type: 'apply-preset', style: preset.style })
   }
@@ -282,7 +289,7 @@ function App () {
     try {
       await nextPaint()
       // Exports render from the live design, so a quick click never saves a stale code
-      await exportQr(toQrCodeOptions(design), { extension: fileExtension, fileName, size: toExportSize(exportSize) })
+      await exportQr(toQrCodeOptions(design), { extension: fileExtension, fileName, size: toExportSize(exportSize), frame: design.frame })
     } finally {
       setIsExporting(false)
     }
@@ -293,7 +300,7 @@ function App () {
     setIsExporting(true)
     try {
       // No paint pause here: Safari only allows clipboard writes that start inside the click
-      setStatus(await copyQrToClipboard(createExportQr(toQrCodeOptions(design), toExportSize(exportSize))))
+      setStatus(await copyQrToClipboard(createExportQr(toQrCodeOptions(design), toExportSize(exportSize)), design.frame))
     } finally {
       setIsExporting(false)
     }
@@ -309,7 +316,9 @@ function App () {
             className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
             <QrLabel content={describeQrContent(design.content)} width={size.width} height={size.height}>
-              <div className={`qr-preview ${background.transparent ? 'qr-preview--transparent' : ''}`} ref={containerRef} />
+              <FramedPreview frame={design.frame} width={size.width} height={size.height}>
+                <div className={`qr-preview ${background.transparent ? 'qr-preview--transparent' : ''}`} ref={containerRef} />
+              </FramedPreview>
             </QrLabel>
             <div aria-live='polite' className='mt-3 space-y-1'>
               {scannabilityIssues.map((issue) => (
@@ -476,6 +485,10 @@ function App () {
                 onLevelChange={onErrorCorrectionLevelChange}
                 hint={showLogoHint ? LOGO_SCAN_HINT : undefined}
               />
+            </Section>
+
+            <Section number='08' title='Frame'>
+              <FrameFields frame={design.frame} onChange={onFrameChange} />
             </Section>
 
             <Section title='Save'>

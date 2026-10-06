@@ -1,4 +1,4 @@
-import { QrDesign, QrLogoSettings } from '../types/design'
+import { QrDesign, QrFrame, QrLogoSettings } from '../types/design'
 import defaultLogo from '../../assets/logo.svg'
 
 export const DEFAULT_LOGO_SETTINGS: QrLogoSettings = {
@@ -9,6 +9,8 @@ export const DEFAULT_LOGO_SETTINGS: QrLogoSettings = {
 
 const INK = '#222222'
 
+export const DEFAULT_FRAME: QrFrame = { text: 'Scan me', color: INK, textColor: '#ffffff' }
+
 export const DEFAULT_QR_DESIGN: QrDesign = {
   content: { type: 'text', text: 'https://github.com/evertcode' },
   size: { width: 300, height: 300 },
@@ -18,5 +20,6 @@ export const DEFAULT_QR_DESIGN: QrDesign = {
   cornersDot: { type: 'dot', fill: { kind: 'solid', color: INK } },
   background: { transparent: false, fill: { kind: 'solid', color: '#ffffff' } },
   margin: 0,
-  logo: { src: defaultLogo, name: 'evertcode mascot', ...DEFAULT_LOGO_SETTINGS }
+  logo: { src: defaultLogo, name: 'evertcode mascot', ...DEFAULT_LOGO_SETTINGS },
+  frame: null
 }
