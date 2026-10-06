@@ -8,6 +8,7 @@ import ColorField from './components/ColorField'
 import InputFile from './components/InputFile'
 import FormatPicker from './components/FormatPicker'
 import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
+import ShapePickers from './components/ShapePickers'
 import Section from './components/Section'
 import QrLabel from './components/QrLabel'
 import Footer from './components/Footer'
@@ -217,7 +218,14 @@ function App () {
               </p>
             </Section>
 
-            <Section number='03' title='Ink'>
+            <Section number='03' title='Shape'>
+              <ShapePickers
+                shapes={{ dots: design.dots.type, cornersSquare: design.cornersSquare.type, cornersDot: design.cornersDot.type }}
+                onShapeChange={dispatch}
+              />
+            </Section>
+
+            <Section number='04' title='Ink'>
               <ColorField
                 id='qr-dots-color'
                 label='Dots'
@@ -240,7 +248,7 @@ function App () {
               />
             </Section>
 
-            <Section number='04' title='Logo'>
+            <Section number='05' title='Logo'>
               <InputFile
                 id='qr-logo'
                 label='Add a logo'

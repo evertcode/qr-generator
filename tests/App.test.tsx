@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
@@ -203,5 +203,22 @@ describe('App', () => {
     expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
     expect(screen.getByText('Design reset')).toHaveAttribute('role', 'status')
+  })
+
+  it('changes the dot shape', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const dots = screen.getByRole('group', { name: 'Dots' })
+
+    expect(within(dots).getByRole('radio', { name: 'Rounded' })).toBeChecked()
+
+    await user.click(within(dots).getByRole('radio', { name: 'Classy' }))
+
+    expect(within(dots).getByRole('radio', { name: 'Classy' })).toBeChecked()
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        dotsOptions: expect.objectContaining({ type: 'classy' })
+      }))
+    })
   })
 })

@@ -11,6 +11,8 @@ export function qrDesignReducer (state: QrDesign, action: QrDesignAction): QrDes
       return { ...state, errorCorrectionLevel: action.level }
     case 'set-fill':
       return { ...state, [action.target]: { ...state[action.target], fill: action.fill } }
+    case 'set-shape':
+      return { ...state, [action.target]: { ...state[action.target], type: action.shape } }
     case 'set-logo':
       // A new image keeps the size and margin chosen for the previous one
       return {

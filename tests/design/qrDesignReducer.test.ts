@@ -29,6 +29,12 @@ describe('qrDesignReducer', () => {
     expect(next).toEqual({ ...DEFAULT_QR_DESIGN, cornersSquare: { type: 'extra-rounded', fill } })
   })
 
+  it('sets the shape of one target and keeps its fill and the other targets', () => {
+    const next = apply({ type: 'set-shape', target: 'dots', shape: 'classy' })
+
+    expect(next).toEqual({ ...DEFAULT_QR_DESIGN, dots: { ...DEFAULT_QR_DESIGN.dots, type: 'classy' } })
+  })
+
   it('replaces the logo image and keeps its size settings', () => {
     const state = { ...DEFAULT_QR_DESIGN, logo: { ...DEFAULT_QR_DESIGN.logo!, size: 0.3 } }
     const next = apply({ type: 'set-logo', src: 'data:image/png;base64,AA', name: 'brand.png' }, state)

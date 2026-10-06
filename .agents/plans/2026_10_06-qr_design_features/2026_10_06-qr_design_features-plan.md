@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:31:49Z"
+last_implementation_at: "2026-10-06T02:37:31Z"
 has_completed_all_phases: "false"
 ---
 
@@ -90,7 +90,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 ### Components
 
 - `OptionPicker<T extends string>` with `OptionPickerProps<T> { id; label; value: T; options: readonly OptionPickerItem<T>[]; onChange: (value: T) => void; hint?: string }`, `OptionPickerItem<T> { value: T; label: string; icon?: ReactNode }` (Phase 2). `FormatPicker` and `ErrorCorrectionPicker` become thin wrappers over it.
-- `ShapeIcon` (inline SVG thumbnails per shape) (Phase 2).
+- `ShapeIcon` (inline SVG thumbnails per shape) and `ShapePickers` with `ShapePickersProps { shapes: QrShapeTypes; onShapeChange: (change: QrSetShapeAction) => void }` (Phase 2).
 - `FillField` with `FillFieldProps { id; label; fill: QrFill; onChange: (fill: QrFill) => void; hint?: string }` (Phase 5; Phase 3 uses `ColorField` for the solid background).
 - `RangeField` with `RangeFieldProps { id; label; value; min; max; step; unit; onChange: NumberChangeHandler }` (Phase 3, reused in Phases 6 and 12).
 - `ContentTypeTabs` and one form per type: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` (Phase 7).
@@ -161,7 +161,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 ### UI text copies
 
 - Phase 1: "Reset design", status "Design reset".
-- Phase 2: section "Shape"; labels "Dots", "Eye frame", "Eye center"; option names "Rounded", "Dots", "Classy", "Classy rounded", "Square", "Extra rounded".
+- Phase 2: section "Shape"; labels "Dots", "Eye frame", "Eye center"; dot options "Rounded", "Dots", "Classy", "Classy rounded", "Square", "Extra rounded"; eye frame options "Rounded", "Square", "Circle"; eye center options "Dot", "Square".
 - Phase 3: section "Background"; "Background color", "Transparent background", "Margin"; hint "Leave some margin so scanners can find the code."; "JPEG can't be transparent. Pick PNG, WebP or SVG."
 - Phase 4: "Low contrast. Some phones may not scan this code.", "Light dots on a dark background don't scan on every phone. Make the dots darker than the background."
 - Phase 5: "Solid", "Gradient", "Linear", "Radial", "Start color", "End color", "Angle".
@@ -193,12 +193,12 @@ Move the app state from the library `Options` to our own `QrDesign` model, with 
 
 Let users pick the shape of the dots, eye frames and eye centers, with visual thumbnails.
 
-- [ ] Create the generic `OptionPicker<T>` (radio group with roving arrow keys from native radios, optional icon and hint) and its props types; rewrite `FormatPicker` and `ErrorCorrectionPicker` on top of it with no behavior change.
-- [ ] Create `ShapeIcon` with small inline SVG thumbnails for every `DotType`, `CornerSquareType` and `CornerDotType`.
-- [ ] Add a `set-shape` action and a "Shape" section with three pickers.
-- [ ] Create `tests/components/OptionPicker.test.tsx`; add "changes the dot shape" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create the generic `OptionPicker<T>` (radio group with roving arrow keys from native radios, optional icon and hint) and its props types; rewrite `FormatPicker` and `ErrorCorrectionPicker` on top of it with no behavior change. _(Options without icons keep the segmented look; options with icons render as tiles in a 3/6 column grid. The radios keep their `${id}-${value}` ids and native arrow key navigation.)_
+- [x] Create `ShapeIcon` with small inline SVG thumbnails for every `DotType`, `CornerSquareType` and `CornerDotType`. _(Dot styles are drawn as three modules in an L so the joined styles read; `Classy` and `Classy rounded` look alike at this size.)_
+- [x] Add a `set-shape` action and a "Shape" section with three pickers. _(`QrSetShapeAction` is typed per target with `QrShapeTypes`. The pickers live in a new `ShapePickers` component to keep `App` small. Sections renumbered: 03 Shape, 04 Ink, 05 Logo. Corner labels: eye frame "Rounded", "Square", "Circle"; eye center "Dot", "Square".)_
+- [x] Create `tests/components/OptionPicker.test.tsx`; add "changes the dot shape" to `tests/App.test.tsx`. _(Also a reducer case for `set-shape` and an icon rendering case. 71 tests pass. Checked in the browser at 1280 and 360 px: shapes apply to the canvas, no overflow.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 3: Background and margin
 
@@ -325,6 +325,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 2 to let users pick the shape of the dots, eye frames and eye centers.
+Implement Phase 3 to expose the background color, a transparent background and the quiet zone margin.
 
-A solid model laid as the first brick of the design studio, with [Codely](https://codely.com) AI tooling. 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+The bricks now come in every shape, thanks to [Codely](https://codely.com) AI tooling. 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
