@@ -27,6 +27,9 @@ import { textAction } from './styles/textAction'
 import { validateLogoFile } from './utils/validateLogoFile'
 import { exceedsQrCapacity } from './utils/qrCapacity'
 import { copyQrToClipboard } from './utils/copyQrToClipboard'
+import { createExportQr, DEFAULT_FILE_NAME, exportQr } from './utils/exportQr'
+import OptionPicker from './components/OptionPicker'
+import Input from './components/Input'
 import { assessScannability } from './utils/contrast'
 import { buildQrPayload, describeQrContent } from './utils/buildQrPayload'
 import { validateQrContent } from './utils/validateQrContent'
@@ -38,7 +41,8 @@ import { resolveInitialDesign } from './design/initialDesign'
 import { encodeDesignToHash, isUploadedLogo } from './design/shareLink'
 import { LOGO_MARGIN_MAX, LOGO_SIZE_MAX, LOGO_SIZE_MIN, MARGIN_MAX, SIZE_MAX, SIZE_MIN } from './design/limits'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { InitialDesignSource, QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
+import { OptionPickerItem } from './types/ui'
+import { InitialDesignSource, QrExportSize, QrExportSizeChoice, QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -78,6 +82,21 @@ const EYE_CENTER_HINT = 'The dot inside each corner square.'
 const BACKGROUND_GRADIENT_END = '#ecfccb'
 const MARGIN_HINT = 'Leave some margin so scanners can find the code.'
 const JPEG_TRANSPARENCY_HINT = "JPEG can't be transparent. Pick PNG, WebP or SVG."
+const EXPORT_SIZE_OPTIONS: readonly OptionPickerItem<QrExportSizeChoice>[] = [
+  { value: 'preview', label: 'Same as preview' },
+  { value: '512', label: '512' },
+  { value: '1024', label: '1024' },
+  { value: '2048', label: '2048' },
+  { value: '4096', label: '4096' }
+]
+const toExportSize = (choice: QrExportSizeChoice): QrExportSize | 'preview' =>
+  choice === 'preview' ? 'preview' : Number(choice) as QrExportSize
+
+const EXPORTING_MESSAGE = 'Preparing your file…'
+
+// Lets the browser paint the busy state before a large export blocks the main thread
+const nextPaint = () => new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve)))
+
 const NO_DISABLED_EXTENSIONS: readonly FileExtension[] = []
 const TRANSPARENT_DISABLED_EXTENSIONS: readonly FileExtension[] = ['jpeg']
 
@@ -103,9 +122,12 @@ function App () {
   // Remounts the content editor on reset so its per-tab drafts are cleared too
   const [resetCount, setResetCount] = useState(0)
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
+  const [fileName, setFileName] = useState('')
+  const [exportSize, setExportSize] = useState<QrExportSizeChoice>('preview')
+  const [isExporting, setIsExporting] = useState(false)
   const debouncedDesign = useDebouncedValue(design, QR_UPDATE_DELAY_MS)
   const qrOptions = useMemo(() => toQrCodeOptions(debouncedDesign), [debouncedDesign])
-  const { containerRef, qrCode } = useQrCode(qrOptions)
+  const { containerRef } = useQrCode(qrOptions)
 
   const payload = buildQrPayload(design.content)
   const { errorCorrectionLevel, size, background } = design
@@ -254,23 +276,27 @@ function App () {
     return () => clearTimeout(timeout)
   }, [status])
 
-  // Flush pending edits so a quick click never exports a stale code
-  const flushQrCode = () => {
-    qrCode.update(toQrCodeOptions(design))
-  }
-
-  const onDownload = () => {
-    if (!canSave) return
-    flushQrCode()
-    qrCode.download({
-      extension: fileExtension
-    })
+  const onDownload = async () => {
+    if (!canSave || isExporting) return
+    setIsExporting(true)
+    try {
+      await nextPaint()
+      // Exports render from the live design, so a quick click never saves a stale code
+      await exportQr(toQrCodeOptions(design), { extension: fileExtension, fileName, size: toExportSize(exportSize) })
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const onCopy = async () => {
-    if (!canSave) return
-    flushQrCode()
-    setStatus(await copyQrToClipboard(qrCode))
+    if (!canSave || isExporting) return
+    setIsExporting(true)
+    try {
+      // No paint pause here: Safari only allows clipboard writes that start inside the click
+      setStatus(await copyQrToClipboard(createExportQr(toQrCodeOptions(design), toExportSize(exportSize))))
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -467,7 +493,7 @@ function App () {
                     type='button'
                     className={`inline-flex items-center h-10 px-5 border border-ink text-ink font-medium hover:bg-rule disabled:border-rule disabled:text-muted disabled:hover:bg-transparent disabled:cursor-not-allowed ${focusRing}`}
                     onClick={onCopy}
-                    disabled={!canSave}
+                    disabled={!canSave || isExporting}
                   >
                     Copy image
                   </button>
@@ -475,16 +501,34 @@ function App () {
                     type='button'
                     className={`inline-flex items-center gap-2 h-10 px-5 bg-moss text-white font-medium hover:bg-ink disabled:bg-rule disabled:text-muted disabled:cursor-not-allowed ${focusRing}`}
                     onClick={onDownload}
-                    disabled={!canSave}
+                    disabled={!canSave || isExporting}
+                    aria-busy={isExporting}
                   >
-                    Save as {fileExtension.toUpperCase()}
-                    <span aria-hidden='true'>↓</span>
+                    {isExporting
+                      ? 'Preparing…'
+                      : <>Save as {fileExtension.toUpperCase()}<span aria-hidden='true'>↓</span></>}
                   </button>
                 </div>
               </div>
+              <div className='grid grid-cols-1 gap-6 sm:grid-cols-[minmax(0,1fr)_auto]'>
+                <Input
+                  id='qr-file-name'
+                  label='File name'
+                  placeholder={DEFAULT_FILE_NAME}
+                  value={fileName}
+                  onChange={(event) => setFileName(event.target.value)}
+                />
+                <OptionPicker
+                  id='qr-export-size'
+                  label='Export size'
+                  value={exportSize}
+                  options={EXPORT_SIZE_OPTIONS}
+                  onChange={setExportSize}
+                />
+              </div>
               <ShareLinkButton onCopy={onCopyLink} logoExcluded={isUploadedLogo(design.logo)} />
               <p role='status' className={`min-h-5 text-sm ${status && SUCCESS_STATUSES.includes(status) ? 'text-moss' : 'text-red-700'}`}>
-                {status && STATUS_MESSAGES[status]}
+                {isExporting ? EXPORTING_MESSAGE : status && STATUS_MESSAGES[status]}
               </p>
             </Section>
           </div>

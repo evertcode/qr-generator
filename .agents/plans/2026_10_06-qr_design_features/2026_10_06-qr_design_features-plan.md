@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T03:28:04Z"
+last_implementation_at: "2026-10-06T14:36:05Z"
 has_completed_all_phases: "false"
 ---
 
@@ -84,7 +84,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `parseQrDesign(value: unknown): QrDesign | null`, `serializeQrDesign(design: QrDesign): QrDesign`, `saveDesign(storage: Storage, design: QrDesign): SaveDesignResult`, `loadSavedDesign(storage: Storage): QrDesign | null`, `clearSavedDesign(storage: Storage): void` and `getDesignStorage(): Storage | null` in `src/design/persistence.ts` (Phase 9). Stored under the `qr-design:v1` key as `{ version: 1, design }`. Shared limits in `src/design/limits.ts` (Phase 9).
 - `encodeDesignToHash(design: QrDesign): string`, `decodeDesignFromHash(hash: string): QrDesign | null`, `hasSharedDesign(hash: string): boolean` and `isUploadedLogo(logo: QrLogo | null): boolean` in `src/design/shareLink.ts`; `resolveInitialDesign(storage: Storage | null, hash: string): InitialDesign` in `src/design/initialDesign.ts`, with `InitialDesign { design; source: 'link' | 'invalid-link' | 'storage' | 'default' }` (Phase 10).
 - `useDesignHistory(initial: QrDesign): DesignHistory` in `src/hooks/useDesignHistory.ts` (Phase 11).
-- `sanitizeFileName(name: string): string` and `exportQr(qrCode: QRCodeStyling, options: QrExportOptions): Promise<void>` in `src/utils/exportQr.ts` (Phase 12).
+- `sanitizeFileName(name: string): string`, `scaleQrOptions(options: Options, size: QrExportSize | 'preview'): Options`, `createExportQr(options: Options, size: QrExportSize | 'preview'): QRCodeStyling` and `exportQr(options: Options, exportOptions: QrExportOptions): Promise<void>` in `src/utils/exportQr.ts` (Phase 12). `QrExportSizeChoice = 'preview' | `${QrExportSize}`` for the picker.
 - `composeFramedQr(qr: Blob, frame: QrFrame, extension: FileExtension): Promise<Blob>` in `src/utils/composeFramedQr.ts` (Phase 13).
 
 ### Components
@@ -164,7 +164,8 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - shows external color changes
 - `tests/utils/exportQr.test.ts` (Phase 12)
   - `sanitizeFileName` strips path separators and reserved chars, trims, falls back to `qr`
-  - exports at the chosen size without changing the preview size
+  - exports at the chosen size from a separate instance without changing the preview options
+  - scales size and both margins together and keeps the aspect ratio
   - uses the sanitized file name
 - `tests/utils/composeFramedQr.test.ts` (Phase 13)
   - returns an SVG that wraps the QR and contains the escaped frame text
@@ -184,7 +185,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - Phase 9: "Restored your last design.", "Your logo was too big to keep for next time."
 - Phase 10: "Copy link", "Link copied", "Couldn't copy the link. Try again.", "Loaded the design from the link.", "Uploaded logos aren't included in links.", "This link has an invalid design. Showing the default one."
 - Phase 11: "Undo", "Redo".
-- Phase 12: "File name", "Export size", "Same as preview".
+- Phase 12: "File name", "Export size", "Same as preview", "Preparing…", "Preparing your file…".
 - Phase 13: section "Frame"; "Add a frame", "Frame text" (default "Scan me"), "Frame color", "Text color".
 
 ## 🪜 Phases
@@ -316,12 +317,12 @@ Let users step back and forward through their changes.
 
 Name the exported file and export at print resolution without enlarging the preview.
 
-- [ ] Create `src/utils/exportQr.ts` with `sanitizeFileName` and `exportQr`, which renders a temporary `QRCodeStyling` instance with the chosen size (keeping the aspect ratio) and downloads it with the given name.
-- [ ] Add "File name" (default `qr`) and "Export size" (`Same as preview`, 512, 1024, 2048, 4096) to the Save section; copy to clipboard uses the same size.
-- [ ] Create `tests/utils/exportQr.test.ts`; add "downloads with the chosen file name" to `tests/App.test.tsx`.
-- [ ] Check in the browser that a 4096 px PNG downloads and the preview size does not change.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/utils/exportQr.ts` with `sanitizeFileName` and `exportQr`, which renders a temporary `QRCodeStyling` instance with the chosen size (keeping the aspect ratio) and downloads it with the given name. _(`exportQr` takes the design `Options` instead of the preview instance. `scaleQrOptions` scales the longest side and both margins together, so the quiet zone keeps its proportion. `createExportQr` is shared with the clipboard copy. `sanitizeFileName` strips path separators, reserved and control characters, a typed image extension and trailing dots, caps the length at 100 and falls back to `qr`.)_
+- [x] Add "File name" (default `qr`) and "Export size" (`Same as preview`, 512, 1024, 2048, 4096) to the Save section; copy to clipboard uses the same size. _(Exports render from the live design, so the old preview flush is gone. Added a busy state not in the original plan: a 4096 px PNG took about 11 s in headless Chromium with no feedback, so while exporting both buttons are disabled, the save button reads "Preparing…" and the status region says "Preparing your file…". Downloads wait one paint before rendering so the busy state shows; copies do not, because Safari needs the clipboard write to start inside the click.)_
+- [x] Create `tests/utils/exportQr.test.ts`; add "downloads with the chosen file name" to `tests/App.test.tsx`. _(Also "shows a busy state while a large export is prepared". The App test double now records constructor options and downloads. 208 tests pass. The suite hangs seen in Phases 11 and 12 came from the verification command, not from Vitest: `timeout` killed npm while Vitest workers kept the `grep` pipe open. Runs written to a file finished every time in 24-45 s.)_
+- [x] Check in the browser that a 4096 px PNG downloads and the preview size does not change. _(4096 x 4096 PNG named "restaurant menu.png" decodes with jsQR, the SVG at 2048 and the clipboard copy at 2048 match, and the preview canvas stays 300 x 300. Timings: 1024 px 0.4 s, 2048 px 0.7 s, 4096 px about 11 s.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 13: Call-to-action frame
 
@@ -338,6 +339,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 12 to name exported files and export at print resolution.
+Implement Phase 13 to add the call-to-action frame.
 
-Changed your mind? Rewind the tape, thanks to [Codely](https://codely.com) AI tooling. ⏪ 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Rewound, polished and now printed poster-sized, thanks to [Codely](https://codely.com) AI tooling. 🖨️ ⏪ 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

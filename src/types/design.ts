@@ -1,4 +1,4 @@
-import { CornerDotType, CornerSquareType, DotType, ErrorCorrectionLevel } from 'qr-code-styling'
+import { CornerDotType, CornerSquareType, DotType, ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 import { QrSizeDimension } from './qr'
 
 export type QrGradientType = 'linear' | 'radial'
@@ -82,6 +82,15 @@ export interface DesignHistory {
   redo: () => void
   canUndo: boolean
   canRedo: boolean
+}
+
+export type QrExportSize = 512 | 1024 | 2048 | 4096
+export type QrExportSizeChoice = 'preview' | `${QrExportSize}`
+
+export interface QrExportOptions {
+  extension: FileExtension
+  fileName: string
+  size: QrExportSize | 'preview'
 }
 
 export type SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'

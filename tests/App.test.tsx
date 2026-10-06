@@ -8,17 +8,23 @@ import { DEFAULT_QR_DESIGN } from '../src/design/defaultDesign'
 import { encodeDesignToHash } from '../src/design/shareLink'
 
 const qrDouble = vi.hoisted(() => ({
+  created: vi.fn(),
   update: vi.fn(),
+  download: vi.fn(),
   getRawData: vi.fn(async () => new Blob(['png'], { type: 'image/png' }))
 }))
 
 // jsdom has no canvas, so the QR library is replaced with a no-op double
 vi.mock('qr-code-styling', () => ({
   default: class {
+    constructor (options: unknown) {
+      qrDouble.created(options)
+    }
+
     append = vi.fn()
     update = qrDouble.update
     getRawData = qrDouble.getRawData
-    download = vi.fn()
+    download = qrDouble.download
   }
 }))
 
@@ -41,6 +47,8 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
   vi.unstubAllGlobals()
   qrDouble.update.mockClear()
+  qrDouble.created.mockClear()
+  qrDouble.download.mockClear()
 })
 
 const TOO_LONG_FOR_Q = 'x'.repeat(1664)
@@ -543,5 +551,40 @@ describe('App', () => {
 
     await user.keyboard('{Control>}{Shift>}z{/Shift}{/Control}')
     expect(dotted).toBeChecked()
+  })
+
+  it('downloads with the chosen file name and export size', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByRole('textbox', { name: 'File name' }), 'menu.png')
+    await user.click(within(screen.getByRole('group', { name: 'Export size' })).getByRole('radio', { name: '2048' }))
+    await user.click(screen.getByRole('button', { name: /save as/i }))
+
+    // The export waits for one paint so the busy state shows first
+    await waitFor(() => {
+      expect(qrDouble.download).toHaveBeenCalledWith({ name: 'menu', extension: 'svg' })
+    })
+    expect(qrDouble.created).toHaveBeenLastCalledWith(expect.objectContaining({ width: 2048, height: 2048 }))
+    expect(screen.getByRole('figure')).toHaveTextContent('300 × 300 px')
+  })
+
+  it('shows a busy state while a large export is prepared', async () => {
+    let finish = () => {}
+    qrDouble.download.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve }))
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /save as/i }))
+
+    const busy = await screen.findByRole('button', { name: 'Preparing…' })
+    expect(busy).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Copy image' })).toBeDisabled()
+    expect(screen.getByText('Preparing your file…')).toHaveAttribute('role', 'status')
+
+    // The busy state shows before the export starts, so wait for the download to be in flight
+    await waitFor(() => expect(qrDouble.download).toHaveBeenCalled())
+    finish()
+    expect(await screen.findByRole('button', { name: /save as svg/i })).toBeEnabled()
   })
 })
