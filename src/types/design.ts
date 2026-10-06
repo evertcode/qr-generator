@@ -75,6 +75,15 @@ export interface InitialDesign {
   source: InitialDesignSource
 }
 
+export interface DesignHistory {
+  design: QrDesign
+  dispatch: (action: QrDesignAction) => void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+}
+
 export type SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'
 
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'

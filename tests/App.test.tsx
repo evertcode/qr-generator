@@ -505,4 +505,43 @@ describe('App', () => {
     expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('pasted link')
     expect(window.location.hash).toBe('')
   })
+  it('undoes and redoes a color change', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const dots = screen.getByRole('textbox', { name: 'Dots' })
+
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+
+    await user.clear(dots)
+    await user.type(dots, '#3f6212')
+    expect(dots).toHaveValue('#3f6212')
+
+    // Typing passes through the valid "#3f6" on the way, and the burst is a single undo step
+    await user.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(dots).toHaveValue('#222222')
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(dots).toHaveValue('#3f6212')
+  })
+
+  it('undoes with the keyboard shortcut outside text fields only', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Dotted' }))
+    const dotted = within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Dots' })
+    expect(dotted).toBeChecked()
+
+    await user.click(screen.getByRole('textbox', { name: 'Link or text' }))
+    await user.keyboard('{Control>}z{/Control}')
+    expect(dotted).toBeChecked()
+
+    await user.click(document.body)
+    await user.keyboard('{Control>}z{/Control}')
+    expect(within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Rounded' })).toBeChecked()
+
+    await user.keyboard('{Control>}{Shift>}z{/Shift}{/Control}')
+    expect(dotted).toBeChecked()
+  })
 })

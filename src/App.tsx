@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState, ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, ChangeEvent } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 
 import Header from './components/Header'
@@ -11,6 +11,7 @@ import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
 import ShapePickers from './components/ShapePickers'
 import PresetPicker from './components/PresetPicker'
 import ShareLinkButton from './components/ShareLinkButton'
+import HistoryControls from './components/HistoryControls'
 import RangeField from './components/RangeField'
 import CheckboxField from './components/CheckboxField'
 import Section from './components/Section'
@@ -19,6 +20,8 @@ import Footer from './components/Footer'
 
 import { useQrCode } from './hooks/useQrCode'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
+import { useDesignHistory } from './hooks/useDesignHistory'
+import { isTextEntry } from './utils/isTextEntry'
 import { focusRing } from './styles/focusRing'
 import { textAction } from './styles/textAction'
 import { validateLogoFile } from './utils/validateLogoFile'
@@ -27,7 +30,6 @@ import { copyQrToClipboard } from './utils/copyQrToClipboard'
 import { assessScannability } from './utils/contrast'
 import { buildQrPayload, describeQrContent } from './utils/buildQrPayload'
 import { validateQrContent } from './utils/validateQrContent'
-import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { QR_STYLE_PRESETS } from './design/presets'
@@ -93,7 +95,7 @@ const capacityMessage = (level: ErrorCorrectionLevel) =>
 function App () {
   const [storage] = useState(getDesignStorage)
   const [initial] = useState(() => resolveInitialDesign(storage, window.location.hash))
-  const [design, dispatch] = useReducer(qrDesignReducer, initial.design)
+  const { design, dispatch, undo, redo, canUndo, canRedo } = useDesignHistory(initial.design)
   const [logoError, setLogoError] = useState<LogoUploadError>()
   const [status, setStatus] = useState<AppStatus | undefined>(INITIAL_STATUSES[initial.source])
   // Warn about an oversized logo once per logo, not on every save
@@ -124,6 +126,18 @@ function App () {
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [initial.source])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 'z' || !(event.metaKey || event.ctrlKey) || event.altKey) return
+      if (isTextEntry(event.target)) return
+      event.preventDefault()
+      if (event.shiftKey) redo()
+      else undo()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [undo, redo])
 
   useEffect(() => {
     if (!storage) return
@@ -279,7 +293,8 @@ function App () {
                 </p>
               ))}
             </div>
-            <div className='mt-3 flex justify-end'>
+            <div className='mt-3 flex items-baseline justify-between gap-4'>
+              <HistoryControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
               <button type='button' onClick={onReset} className={`${textAction} text-muted hover:text-ink`}>
                 Reset design
               </button>

@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T03:12:59Z"
+last_implementation_at: "2026-10-06T03:28:04Z"
 has_completed_all_phases: "false"
 ---
 
@@ -95,7 +95,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
 - `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
 - `ContentEditor` (`ContentEditorProps { content; onChange; capacityError? }`), `ContentTypeTabs` and one form per type in `src/components/content/`: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` with `ContentFormProps<T>` (Phase 7). `InputProps.type?: InputType` (Phase 7).
-- `PresetPicker` with `PresetPickerProps { presets: readonly QrStylePreset[]; onApply: (preset: QrStylePreset) => void }` (Phase 8), `HistoryControls` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
+- `PresetPicker` with `PresetPickerProps { presets: readonly QrStylePreset[]; onApply: (preset: QrStylePreset) => void }` (Phase 8), `HistoryControls` with `HistoryControlsProps { canUndo; canRedo; onUndo; onRedo }` and `isTextEntry(target: EventTarget | null): boolean` (Phase 11), `ShareLinkButton` (Phase 10), `FrameFields` (Phase 13).
 
 ### Test suites
 
@@ -158,6 +158,10 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - a new change after undo drops the redo stack
   - consecutive edits of the same field within 500 ms count as one step
   - limits history to 100 steps
+  - never merges different fields or discrete actions, and ignores no-op actions
+- `tests/components/ColorField.test.tsx` (Phase 11)
+  - lets users type a full hex that starts with a valid short hex
+  - shows external color changes
 - `tests/utils/exportQr.test.ts` (Phase 12)
   - `sanitizeFileName` strips path separators and reserved chars, trims, falls back to `qr`
   - exports at the chosen size without changing the preview size
@@ -301,12 +305,12 @@ Let users share or bookmark a design as a link.
 
 Let users step back and forward through their changes.
 
-- [ ] Create `src/hooks/useDesignHistory.ts` wrapping `qrDesignReducer` with past/future stacks (max 100), coalescing same-field edits within 500 ms.
-- [ ] Replace `useReducer` in `App` with `useDesignHistory`; `reset`, presets and loaded designs are undoable steps.
-- [ ] Add `HistoryControls` ("Undo", "Redo" buttons, disabled when not available) and the ⌘/Ctrl+Z, ⌘/Ctrl+Shift+Z shortcuts, ignored while typing in a text field so native undo keeps working there.
-- [ ] Create `tests/hooks/useDesignHistory.test.ts`; add "undoes and redoes a color change" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/hooks/useDesignHistory.ts` wrapping `qrDesignReducer` with past/future stacks (max 100), coalescing same-field edits within 500 ms. _(A pure history reducer; edits coalesce by field key (content type, size dimension, fill target, margin, logo setting) while gaps stay under 500 ms. Discrete actions (shapes, presets, logo upload, reset, replace) are always their own step, and actions that change nothing add no step. `HISTORY_LIMIT` and `COALESCE_WINDOW_MS` are exported.)_
+- [x] Replace `useReducer` in `App` with `useDesignHistory`; `reset`, presets and loaded designs are undoable steps.
+- [x] Add `HistoryControls` ("Undo", "Redo" buttons, disabled when not available) and the ⌘/Ctrl+Z, ⌘/Ctrl+Shift+Z shortcuts, ignored while typing in a text field so native undo keeps working there. _(`isTextEntry` in `src/utils/isTextEntry.ts` decides it: text-like inputs, textareas and contenteditable. Buttons carry `aria-keyshortcuts`. They sit under the preview, left of "Reset design".)_
+- [x] Create `tests/hooks/useDesignHistory.test.ts`; add "undoes and redoes a color change" to `tests/App.test.tsx`. _(That case exposed a bug that predates this plan: `ColorField` overwrote the draft when typing passed through a valid short hex, so "#3f6212" became "#33ff66". Fixed by syncing the draft only on external changes, with a new `tests/components/ColorField.test.tsx` confirmed to fail without the fix. Also a keyboard shortcut case. 191 tests pass. One full run hung once and could not be reproduced in two reruns (35-43 s). In the browser ten slider steps undo as one step, and presets undo and redo with the shortcuts.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 12: Print-ready export
 
@@ -334,6 +338,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 11 to let users undo and redo their changes.
+Implement Phase 12 to name exported files and export at print resolution.
 
-And now any outfit can be lent to a friend with a single link, thanks to [Codely](https://codely.com) AI tooling. 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+Changed your mind? Rewind the tape, thanks to [Codely](https://codely.com) AI tooling. ⏪ 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

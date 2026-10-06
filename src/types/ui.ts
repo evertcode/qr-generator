@@ -140,6 +140,13 @@ export interface ShareLinkButtonProps {
   logoExcluded: boolean
 }
 
+export interface HistoryControlsProps {
+  canUndo: boolean
+  canRedo: boolean
+  onUndo: () => void
+  onRedo: () => void
+}
+
 export interface SectionProps {
   number?: string
   title: string
