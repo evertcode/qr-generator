@@ -1,9 +1,7 @@
 import { useRef } from 'react'
 import { InputFileProps } from '../types/ui'
-import { focusRing } from '../styles/focusRing'
+import { textAction } from '../styles/textAction'
 import { LOGO_ACCEPTED_TYPES } from '../utils/validateLogoFile'
-
-const textAction = `rounded-sm text-sm font-medium underline underline-offset-4 decoration-1 hover:decoration-2 ${focusRing}`
 
 function InputFile ({ id, label, image, imageName, onChangeImage, onRemoveImage, error }: InputFileProps) {
   const inputRef = useRef<HTMLInputElement>(null)

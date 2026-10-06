@@ -11,7 +11,8 @@ function ColorField ({ id, label, color, onChange, hint }: ColorFieldProps) {
   const isDraftValid = normalizeHexColor(draft) !== null
 
   useEffect(() => {
-    setDraft(color)
+    // Only external changes overwrite the draft: typing "#3f6" on the way to "#3f6212" must not jump to "#33ff66"
+    setDraft((current) => normalizeHexColor(current) === color ? current : color)
   }, [color])
 
   const onSwatchChange = (event: ChangeEvent<HTMLInputElement>) => {

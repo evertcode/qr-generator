@@ -1,11 +1,14 @@
 import { ChangeEvent, ReactNode } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
+import { QrContent, QrContentOf, QrContentType, QrFill, QrFrame, QrSetShapeAction, QrShapeTarget, QrShapeTypes, QrStylePreset } from './design'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
 export type NumberChangeHandler = (value: number) => void
 export type ColorChangeHandler = (color: string) => void
 export type ErrorCorrectionLevelChangeHandler = (level: ErrorCorrectionLevel) => void
+
+export type InputType = 'text' | 'email' | 'tel' | 'url'
 
 export interface InputProps {
   id: string
@@ -14,6 +17,8 @@ export interface InputProps {
   value: string | number | undefined
   onChange: InputChangeHandler
   error?: string
+  type?: InputType
+  maxLength?: number
 }
 
 export interface SizeFieldProps {
@@ -23,6 +28,19 @@ export interface SizeFieldProps {
   min: number
   max: number
   onChange: NumberChangeHandler
+}
+
+export interface RangeFieldProps extends SizeFieldProps {
+  step: number
+  unit: string
+  hint?: string
+}
+
+export interface CheckboxFieldProps {
+  id: string
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
 }
 
 export interface ColorFieldProps {
@@ -48,6 +66,8 @@ export interface FormatPickerProps {
   label: string
   fileExtension: FileExtension
   onExtensionChange: ExtensionChangeHandler
+  disabledExtensions?: readonly FileExtension[]
+  hint?: string
 }
 
 export interface ErrorCorrectionPickerProps {
@@ -56,6 +76,88 @@ export interface ErrorCorrectionPickerProps {
   level: ErrorCorrectionLevel
   onLevelChange: ErrorCorrectionLevelChangeHandler
   hint?: string
+}
+
+export interface OptionPickerItem<T extends string> {
+  value: T
+  label: string
+  icon?: ReactNode
+  disabled?: boolean
+}
+
+export interface OptionPickerProps<T extends string> {
+  id: string
+  label: string
+  value: T
+  options: readonly OptionPickerItem<T>[]
+  onChange: (value: T) => void
+  hint?: string
+  labelHidden?: boolean
+}
+
+export type ShapeIconProps = {
+  [K in QrShapeTarget]: { target: K; shape: QrShapeTypes[K] }
+}[QrShapeTarget]
+
+export interface ShapePickersProps {
+  shapes: QrShapeTypes
+  onShapeChange: (change: QrSetShapeAction) => void
+}
+
+export interface FillFieldProps {
+  id: string
+  label: string
+  fill: QrFill
+  onChange: (fill: QrFill) => void
+  hint?: string
+  defaultGradientEnd?: string
+}
+
+export interface ContentTypeTabsProps {
+  id: string
+  value: QrContentType
+  onChange: (type: QrContentType) => void
+}
+
+export interface ContentFormProps<T extends QrContentType> {
+  content: QrContentOf<T>
+  onChange: (content: QrContentOf<T>) => void
+  error?: string
+}
+
+export interface ContentEditorProps {
+  content: QrContent
+  onChange: (content: QrContent) => void
+  capacityError?: string
+}
+
+export interface PresetPickerProps {
+  presets: readonly QrStylePreset[]
+  onApply: (preset: QrStylePreset) => void
+}
+
+export interface ShareLinkButtonProps {
+  onCopy: () => void
+  logoExcluded: boolean
+}
+
+export interface HistoryControlsProps {
+  canUndo: boolean
+  canRedo: boolean
+  onUndo: () => void
+  onRedo: () => void
+}
+
+export interface FrameFieldsProps {
+  frame: QrFrame | null
+  onChange: (frame: QrFrame | null) => void
+}
+
+export interface FramedPreviewProps {
+  frame: QrFrame | null
+  width: number
+  height: number
+  children: ReactNode
 }
 
 export interface SectionProps {

@@ -1,7 +1,7 @@
 import { InputProps } from '../types/ui'
 import { fieldBase, fieldInvalid, fieldLabel, fieldValid } from '../styles/field'
 
-function Input ({ id, label, value, onChange, placeholder, error }: InputProps) {
+function Input ({ id, label, value, onChange, placeholder, error, type = 'text', maxLength }: InputProps) {
   const errorId = `${id}-error`
 
   return (
@@ -12,7 +12,8 @@ function Input ({ id, label, value, onChange, placeholder, error }: InputProps) 
       <input
         id={id}
         placeholder={placeholder}
-        type='text'
+        maxLength={maxLength}
+        type={type}
         className={`${fieldBase} ${error ? fieldInvalid : fieldValid}`}
         value={value}
         onChange={onChange}

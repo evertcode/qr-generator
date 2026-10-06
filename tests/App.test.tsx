@@ -1,21 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
+import { DESIGN_STORAGE_KEY, serializeQrDesign } from '../src/design/persistence'
+import { DEFAULT_QR_DESIGN } from '../src/design/defaultDesign'
+import { encodeDesignToHash } from '../src/design/shareLink'
 
 const qrDouble = vi.hoisted(() => ({
+  created: vi.fn(),
   update: vi.fn(),
+  download: vi.fn(),
   getRawData: vi.fn(async () => new Blob(['png'], { type: 'image/png' }))
 }))
 
 // jsdom has no canvas, so the QR library is replaced with a no-op double
 vi.mock('qr-code-styling', () => ({
   default: class {
+    constructor (options: unknown) {
+      qrDouble.created(options)
+    }
+
     append = vi.fn()
     update = qrDouble.update
     getRawData = qrDouble.getRawData
-    download = vi.fn()
+    download = qrDouble.download
   }
 }))
 
@@ -35,8 +44,11 @@ class FailingFileReader {
 }
 
 afterEach(() => {
+  window.history.replaceState(null, '', '/')
   vi.unstubAllGlobals()
   qrDouble.update.mockClear()
+  qrDouble.created.mockClear()
+  qrDouble.download.mockClear()
 })
 
 const TOO_LONG_FOR_Q = 'x'.repeat(1664)
@@ -45,7 +57,7 @@ describe('App', () => {
   it('renders with the default text and logo', () => {
     render(<App />)
 
-    expect(screen.getByLabelText('Link or text')).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
     expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
   })
 
@@ -53,7 +65,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.type(field, 'hello qr')
 
@@ -64,7 +76,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.clear(screen.getByLabelText('Link or text'))
+    await user.clear(screen.getByRole('textbox', { name: 'Link or text' }))
 
     expect(screen.getByRole('button', { name: /save as/i })).toBeDisabled()
     expect(screen.getByText(/nothing to encode yet/i)).toBeInTheDocument()
@@ -121,7 +133,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.click(field)
     await user.paste(TOO_LONG_FOR_Q)
@@ -139,7 +151,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const field = screen.getByLabelText('Link or text')
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
     await user.clear(field)
     await user.click(field)
     await user.paste(TOO_LONG_FOR_Q)
@@ -185,5 +197,418 @@ describe('App', () => {
 
     expect(screen.getByLabelText('Eye frame')).toHaveAccessibleDescription('The outer square in each corner.')
     expect(screen.getByLabelText('Eye center')).toHaveAccessibleDescription('The dot inside each corner square.')
+  })
+
+  it('resets the design to the defaults', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'edited')
+    await user.click(screen.getByRole('radio', { name: 'H' }))
+    await user.click(screen.getByRole('button', { name: 'remove' }))
+
+    await user.click(screen.getByRole('button', { name: 'Reset design' }))
+
+    // The content editor remounts on reset to clear its per-tab drafts
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
+    expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
+    expect(screen.getByText('Design reset')).toHaveAttribute('role', 'status')
+  })
+
+  it('changes the dot shape', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const dots = screen.getByRole('group', { name: 'Dots' })
+
+    expect(within(dots).getByRole('radio', { name: 'Rounded' })).toBeChecked()
+
+    await user.click(within(dots).getByRole('radio', { name: 'Classy' }))
+
+    expect(within(dots).getByRole('radio', { name: 'Classy' })).toBeChecked()
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        dotsOptions: expect.objectContaining({ type: 'classy' })
+      }))
+    })
+  })
+
+  it('disables JPEG with a transparent background', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const formats = screen.getByRole('group', { name: 'File format' })
+
+    await user.click(within(formats).getByRole('radio', { name: 'jpeg' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Transparent background' }))
+
+    expect(within(formats).getByRole('radio', { name: 'jpeg' })).toBeDisabled()
+    expect(within(formats).getByRole('radio', { name: 'png' })).toBeChecked()
+    expect(formats).toHaveAccessibleDescription("JPEG can't be transparent. Pick PNG, WebP or SVG.")
+    expect(screen.queryByLabelText('Background color')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Transparent background' }))
+
+    expect(within(formats).getByRole('radio', { name: 'jpeg' })).toBeEnabled()
+    expect(screen.getByLabelText('Background color')).toBeInTheDocument()
+  })
+
+  it('changes the margin', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const margin = screen.getByLabelText('Margin')
+    await user.clear(margin)
+    await user.type(margin, '16')
+
+    expect(margin).toHaveAccessibleDescription('Leave some margin so scanners can find the code.')
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({ margin: 16 }))
+    })
+  })
+
+  it('warns about low contrast', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const message = 'Low contrast. Some phones may not scan this code.'
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
+
+    const dots = screen.getByRole('textbox', { name: 'Dots' })
+    await user.clear(dots)
+    await user.type(dots, '#cccccc')
+
+    expect(screen.getByText(message).closest('[aria-live]')).toHaveAttribute('aria-live', 'polite')
+  })
+
+  it('warns about inverted colors', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    for (const [name, color] of [['Dots', '#ffffff'], ['Eye frame', '#ffffff'], ['Eye center', '#ffffff'], ['Background color', '#222222']]) {
+      const field = screen.getByRole('textbox', { name })
+      await user.clear(field)
+      await user.type(field, color)
+    }
+
+    expect(screen.getByText(/light dots on a dark background/i)).toBeInTheDocument()
+    expect(screen.queryByText(/low contrast/i)).not.toBeInTheDocument()
+  })
+
+  it('applies a gradient to the dots', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const lastDotsOptions = () => qrDouble.update.mock.lastCall?.[0].dotsOptions
+
+    await user.click(within(screen.getByRole('group', { name: 'Dots fill' })).getByRole('radio', { name: 'Gradient' }))
+    const gradient = screen.getByRole('group', { name: 'Dots gradient' })
+    const angle = within(gradient).getByRole('spinbutton', { name: 'Angle' })
+    await user.clear(angle)
+    await user.type(angle, '90')
+
+    await waitFor(() => {
+      expect(lastDotsOptions()?.gradient).toEqual({
+        type: 'linear',
+        rotation: Math.PI / 2,
+        colorStops: [{ offset: 0, color: '#222222' }, { offset: 1, color: '#3f6212' }]
+      })
+    })
+
+    await user.click(within(gradient).getByRole('radio', { name: 'Radial' }))
+    expect(within(gradient).queryByRole('spinbutton', { name: 'Angle' })).not.toBeInTheDocument()
+
+    await user.click(within(screen.getByRole('group', { name: 'Dots fill' })).getByRole('radio', { name: 'Solid' }))
+    await waitFor(() => {
+      expect(lastDotsOptions()).toEqual(expect.objectContaining({ color: '#222222', gradient: undefined }))
+    })
+  })
+
+  it('changes the logo size', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const size = screen.getByRole('spinbutton', { name: 'Logo size' })
+    expect(size).toHaveValue(40)
+
+    await user.clear(size)
+    await user.type(size, '25')
+    await user.click(screen.getByRole('checkbox', { name: 'Hide dots behind the logo' }))
+
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        imageOptions: expect.objectContaining({ imageSize: 0.25, hideBackgroundDots: false })
+      }))
+    })
+  })
+
+  it('hides the logo controls without a logo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'remove' }))
+
+    expect(screen.queryByRole('spinbutton', { name: 'Logo size' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton', { name: 'Logo margin' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: 'Hide dots behind the logo' })).not.toBeInTheDocument()
+  })
+
+  it('builds a WiFi code', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('tab', { name: 'WiFi' }))
+    await user.type(screen.getByRole('textbox', { name: 'Network name' }), 'Home')
+    await user.type(screen.getByRole('textbox', { name: 'Password' }), 'secret')
+
+    expect(screen.getByRole('figure')).toHaveTextContent('WiFi · Home')
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: 'WIFI:T:WPA;S:Home;P:secret;;' }))
+    })
+  })
+
+  it('shows a required field error and disables saving', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('tab', { name: 'WiFi' }))
+
+    expect(screen.getByText('Add a network name.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /save as/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Copy image' })).toBeDisabled()
+  })
+
+  it('keeps the text when switching tabs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'kept')
+    await user.click(screen.getByRole('tab', { name: 'Email' }))
+    await user.type(screen.getByRole('textbox', { name: 'To' }), 'hi@site.com')
+    await user.click(screen.getByRole('tab', { name: 'Link or text' }))
+
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('kept')
+
+    await user.click(screen.getByRole('tab', { name: 'Email' }))
+    expect(screen.getByRole('textbox', { name: 'To' })).toHaveValue('hi@site.com')
+  })
+
+  it('moves between content tabs with the arrow keys', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    screen.getByRole('tab', { name: 'Link or text' }).focus()
+    await user.keyboard('{ArrowRight}')
+
+    const wifi = screen.getByRole('tab', { name: 'WiFi' })
+    expect(wifi).toHaveAttribute('aria-selected', 'true')
+    expect(wifi).toHaveFocus()
+    expect(screen.getByRole('tabpanel', { name: 'WiFi' })).toBeInTheDocument()
+  })
+
+  it('applies a preset and keeps the content', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'my link')
+    await user.click(screen.getByRole('button', { name: 'Dotted' }))
+
+    expect(field).toHaveValue('my link')
+    expect(within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Dots' })).toBeChecked()
+    expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({
+        data: 'my link',
+        margin: 16,
+        dotsOptions: expect.objectContaining({ type: 'dots', color: '#1e293b' })
+      }))
+    })
+  })
+
+  it('restores the saved design', () => {
+    const saved = { ...DEFAULT_QR_DESIGN, content: { type: 'text' as const, text: 'saved link' }, margin: 8 }
+    localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify({ version: 1, design: serializeQrDesign(saved) }))
+
+    render(<App />)
+
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('saved link')
+    expect(screen.getByRole('spinbutton', { name: 'Margin' })).toHaveValue(8)
+    expect(screen.getByText('Restored your last design.')).toHaveAttribute('role', 'status')
+  })
+
+  it('saves edits and clears the saved design on reset', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'keep me')
+
+    await waitFor(() => {
+      expect(localStorage.getItem(DESIGN_STORAGE_KEY)).toContain('keep me')
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Reset design' }))
+
+    expect(localStorage.getItem(DESIGN_STORAGE_KEY)).toBeNull()
+  })
+
+  it('loads a design from the link and clears the hash', () => {
+    const linked = { ...DEFAULT_QR_DESIGN, content: { type: 'phone' as const, number: '+34 600 000 000' } }
+    window.history.replaceState(null, '', `/#${encodeDesignToHash(linked)}`)
+
+    render(<App />)
+
+    expect(screen.getByRole('tab', { name: 'Phone' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('textbox', { name: 'Phone number' })).toHaveValue('+34 600 000 000')
+    expect(screen.getByText('Loaded the design from the link.')).toHaveAttribute('role', 'status')
+    expect(window.location.hash).toBe('')
+  })
+
+  it('shows an error and the default design for an invalid link', () => {
+    window.history.replaceState(null, '', '/#design=broken')
+
+    render(<App />)
+
+    expect(screen.getByText('This link has an invalid design. Showing the default one.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+  })
+
+  it('copies the share link', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+
+    const copied = await navigator.clipboard.readText()
+    expect(copied).toMatch(/#design=[A-Za-z0-9_-]+$/)
+    expect(screen.getByText('Link copied')).toHaveAttribute('role', 'status')
+  })
+
+  it('warns that uploaded logos are left out of links', async () => {
+    const user = setupUser()
+    render(<App />)
+
+    expect(screen.getByRole('button', { name: 'Copy link' })).not.toHaveAccessibleDescription()
+
+    await user.upload(logoInput(), new File(['<svg/>'], 'brand.svg', { type: 'image/svg+xml' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Copy link' })).toHaveAccessibleDescription("Uploaded logos aren't included in links.")
+    })
+  })
+
+  it('loads a link pasted into the open app', async () => {
+    render(<App />)
+    const linked = { ...DEFAULT_QR_DESIGN, content: { type: 'text' as const, text: 'pasted link' } }
+
+    window.history.replaceState(null, '', `/#${encodeDesignToHash(linked)}`)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(await screen.findByText('Loaded the design from the link.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('pasted link')
+    expect(window.location.hash).toBe('')
+  })
+  it('undoes and redoes a color change', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const dots = screen.getByRole('textbox', { name: 'Dots' })
+
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+
+    await user.clear(dots)
+    await user.type(dots, '#3f6212')
+    expect(dots).toHaveValue('#3f6212')
+
+    // Typing passes through the valid "#3f6" on the way, and the burst is a single undo step
+    await user.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(dots).toHaveValue('#222222')
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(dots).toHaveValue('#3f6212')
+  })
+
+  it('undoes with the keyboard shortcut outside text fields only', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Dotted' }))
+    const dotted = within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Dots' })
+    expect(dotted).toBeChecked()
+
+    await user.click(screen.getByRole('textbox', { name: 'Link or text' }))
+    await user.keyboard('{Control>}z{/Control}')
+    expect(dotted).toBeChecked()
+
+    await user.click(document.body)
+    await user.keyboard('{Control>}z{/Control}')
+    expect(within(screen.getByRole('group', { name: 'Dots' })).getByRole('radio', { name: 'Rounded' })).toBeChecked()
+
+    await user.keyboard('{Control>}{Shift>}z{/Shift}{/Control}')
+    expect(dotted).toBeChecked()
+  })
+
+  it('downloads with the chosen file name and export size', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByRole('textbox', { name: 'File name' }), 'menu.png')
+    await user.click(within(screen.getByRole('group', { name: 'Export size' })).getByRole('radio', { name: '2048' }))
+    await user.click(screen.getByRole('button', { name: /save as/i }))
+
+    // The export waits for one paint so the busy state shows first
+    await waitFor(() => {
+      expect(qrDouble.download).toHaveBeenCalledWith({ name: 'menu', extension: 'svg' })
+    })
+    expect(qrDouble.created).toHaveBeenLastCalledWith(expect.objectContaining({ width: 2048, height: 2048 }))
+    expect(screen.getByRole('figure')).toHaveTextContent('300 × 300 px')
+  })
+
+  it('shows a busy state while a large export is prepared', async () => {
+    let finish = () => {}
+    qrDouble.download.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve }))
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /save as/i }))
+
+    const busy = await screen.findByRole('button', { name: 'Preparing…' })
+    expect(busy).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Copy image' })).toBeDisabled()
+    expect(screen.getByText('Preparing your file…')).toHaveAttribute('role', 'status')
+
+    // The busy state shows before the export starts, so wait for the download to be in flight
+    await waitFor(() => expect(qrDouble.download).toHaveBeenCalled())
+    finish()
+    expect(await screen.findByRole('button', { name: /save as svg/i })).toBeEnabled()
+  })
+
+  it('adds a frame with text', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByTestId('qr-frame')).toHaveAttribute('data-framed', 'false')
+
+    await user.click(screen.getByRole('checkbox', { name: 'Add a frame' }))
+    const text = screen.getByRole('textbox', { name: 'Frame text' })
+    await user.clear(text)
+    await user.type(text, 'Menu inside')
+
+    expect(screen.getByTestId('qr-frame')).toHaveTextContent('Menu inside')
+    expect(text).toHaveAttribute('maxLength', '24')
+    expect(screen.getByText('The frame touches the code. Add some margin so it still scans.')).toBeInTheDocument()
+
+    const margin = screen.getByRole('spinbutton', { name: 'Margin' })
+    await user.clear(margin)
+    await user.type(margin, '16')
+    expect(screen.queryByText(/the frame touches the code/i)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Add a frame' }))
+    expect(screen.getByTestId('qr-frame')).toHaveAttribute('data-framed', 'false')
   })
 })
