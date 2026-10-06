@@ -282,4 +282,32 @@ describe('App', () => {
     expect(screen.getByText(/light dots on a dark background/i)).toBeInTheDocument()
     expect(screen.queryByText(/low contrast/i)).not.toBeInTheDocument()
   })
+
+  it('applies a gradient to the dots', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const lastDotsOptions = () => qrDouble.update.mock.lastCall?.[0].dotsOptions
+
+    await user.click(within(screen.getByRole('group', { name: 'Dots fill' })).getByRole('radio', { name: 'Gradient' }))
+    const gradient = screen.getByRole('group', { name: 'Dots gradient' })
+    const angle = within(gradient).getByRole('spinbutton', { name: 'Angle' })
+    await user.clear(angle)
+    await user.type(angle, '90')
+
+    await waitFor(() => {
+      expect(lastDotsOptions()?.gradient).toEqual({
+        type: 'linear',
+        rotation: Math.PI / 2,
+        colorStops: [{ offset: 0, color: '#222222' }, { offset: 1, color: '#3f6212' }]
+      })
+    })
+
+    await user.click(within(gradient).getByRole('radio', { name: 'Radial' }))
+    expect(within(gradient).queryByRole('spinbutton', { name: 'Angle' })).not.toBeInTheDocument()
+
+    await user.click(within(screen.getByRole('group', { name: 'Dots fill' })).getByRole('radio', { name: 'Solid' }))
+    await waitFor(() => {
+      expect(lastDotsOptions()).toEqual(expect.objectContaining({ color: '#222222', gradient: undefined }))
+    })
+  })
 })

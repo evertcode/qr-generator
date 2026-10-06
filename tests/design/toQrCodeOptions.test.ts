@@ -34,6 +34,40 @@ describe('toQrCodeOptions', () => {
     expect(options.cornersSquareOptions).toEqual({ color: '#222222', type: 'extra-rounded' })
   })
 
+  it('maps a gradient fill to a two stop gradient with the rotation in radians', () => {
+    const options = toQrCodeOptions({
+      ...DEFAULT_QR_DESIGN,
+      dots: { type: 'rounded', fill: { kind: 'gradient', gradientType: 'linear', rotation: 90, colors: ['#222222', '#3f6212'] } }
+    })
+
+    expect(options.dotsOptions).toEqual({
+      type: 'rounded',
+      color: '#222222',
+      gradient: {
+        type: 'linear',
+        rotation: Math.PI / 2,
+        colorStops: [{ offset: 0, color: '#222222' }, { offset: 1, color: '#3f6212' }]
+      }
+    })
+  })
+
+  it('always sends the gradient key so switching back to solid clears it', () => {
+    const options = toQrCodeOptions(DEFAULT_QR_DESIGN)
+
+    expect(Object.keys(options.dotsOptions!)).toContain('gradient')
+    expect(options.dotsOptions!.gradient).toBeUndefined()
+    expect(Object.keys(options.backgroundOptions!)).toContain('gradient')
+  })
+
+  it('maps a background gradient', () => {
+    const options = toQrCodeOptions({
+      ...DEFAULT_QR_DESIGN,
+      background: { transparent: false, fill: { kind: 'gradient', gradientType: 'radial', rotation: 0, colors: ['#ffffff', '#ecfccb'] } }
+    })
+
+    expect(options.backgroundOptions?.gradient?.type).toBe('radial')
+  })
+
   it('maps the background color and margin', () => {
     const options = toQrCodeOptions({
       ...DEFAULT_QR_DESIGN,

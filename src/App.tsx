@@ -4,7 +4,7 @@ import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 import Header from './components/Header'
 import Input from './components/Input'
 import SizeField from './components/SizeField'
-import ColorField from './components/ColorField'
+import FillField from './components/FillField'
 import InputFile from './components/InputFile'
 import FormatPicker from './components/FormatPicker'
 import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
@@ -27,7 +27,7 @@ import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrFillTarget, ScannabilityIssue } from './types/design'
+import { QrFill, QrFillTarget, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -54,6 +54,8 @@ const STATUS_DURATION_MS = 4000
 const EYE_FRAME_HINT = 'The outer square in each corner.'
 const EYE_CENTER_HINT = 'The dot inside each corner square.'
 
+// A pale lime keeps a background gradient light enough for dark dots
+const BACKGROUND_GRADIENT_END = '#ecfccb'
 const MARGIN_HINT = 'Leave some margin so scanners can find the code.'
 const JPEG_TRANSPARENCY_HINT = "JPEG can't be transparent. Pick PNG, WebP or SVG."
 const NO_DISABLED_EXTENSIONS: readonly FileExtension[] = []
@@ -140,8 +142,8 @@ function App () {
     setLogoError(undefined)
   }
 
-  const onChangeColor = (target: QrFillTarget) => (color: string) => {
-    dispatch({ type: 'set-fill', target, fill: { kind: 'solid', color } })
+  const onChangeFill = (target: QrFillTarget) => (fill: QrFill) => {
+    dispatch({ type: 'set-fill', target, fill })
   }
 
   const onTransparentChange = (transparent: boolean) => {
@@ -258,25 +260,25 @@ function App () {
             </Section>
 
             <Section number='04' title='Ink'>
-              <ColorField
+              <FillField
                 id='qr-dots-color'
                 label='Dots'
-                color={design.dots.fill.color}
-                onChange={onChangeColor('dots')}
+                fill={design.dots.fill}
+                onChange={onChangeFill('dots')}
               />
-              <ColorField
+              <FillField
                 id='qr-square-color'
                 label='Eye frame'
                 hint={EYE_FRAME_HINT}
-                color={design.cornersSquare.fill.color}
-                onChange={onChangeColor('cornersSquare')}
+                fill={design.cornersSquare.fill}
+                onChange={onChangeFill('cornersSquare')}
               />
-              <ColorField
+              <FillField
                 id='qr-corner-color'
                 label='Eye center'
                 hint={EYE_CENTER_HINT}
-                color={design.cornersDot.fill.color}
-                onChange={onChangeColor('cornersDot')}
+                fill={design.cornersDot.fill}
+                onChange={onChangeFill('cornersDot')}
               />
             </Section>
 
@@ -288,11 +290,12 @@ function App () {
                 onChange={onTransparentChange}
               />
               {!background.transparent && (
-                <ColorField
+                <FillField
                   id='qr-background-color'
                   label='Background color'
-                  color={background.fill.color}
-                  onChange={onChangeColor('background')}
+                  fill={background.fill}
+                  defaultGradientEnd={BACKGROUND_GRADIENT_END}
+                  onChange={onChangeFill('background')}
                 />
               )}
               <RangeField

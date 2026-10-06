@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:45:12Z"
+last_implementation_at: "2026-10-06T02:50:27Z"
 has_completed_all_phases: "false"
 ---
 
@@ -91,7 +91,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 
 - `OptionPicker<T extends string>` with `OptionPickerProps<T> { id; label; value: T; options: readonly OptionPickerItem<T>[]; onChange: (value: T) => void; hint?: string }`, `OptionPickerItem<T> { value: T; label: string; icon?: ReactNode }` (Phase 2). `FormatPicker` and `ErrorCorrectionPicker` become thin wrappers over it.
 - `ShapeIcon` (inline SVG thumbnails per shape) and `ShapePickers` with `ShapePickersProps { shapes: QrShapeTypes; onShapeChange: (change: QrSetShapeAction) => void }` (Phase 2).
-- `FillField` with `FillFieldProps { id; label; fill: QrFill; onChange: (fill: QrFill) => void; hint?: string }` (Phase 5; Phase 3 uses `ColorField` for the solid background).
+- `FillField` with `FillFieldProps { id; label; fill: QrFill; onChange: (fill: QrFill) => void; hint?: string; defaultGradientEnd?: string }` (Phase 5; Phase 3 uses `ColorField` for the solid background). `OptionPickerProps.labelHidden?` (Phase 5).
 - `RangeField` with `RangeFieldProps extends SizeFieldProps { step; unit; hint? }` (Phase 3, reused in Phases 6 and 12) and `CheckboxField` with `CheckboxFieldProps { id; label; checked; onChange: (checked: boolean) => void }` (Phase 3, reused in Phases 6 and 13).
 - `OptionPickerItem.disabled?` and `FormatPickerProps.disabledExtensions? / hint?` (Phase 3).
 - `ContentTypeTabs` and one form per type: `TextContentForm`, `WifiContentForm`, `EmailContentForm`, `PhoneContentForm`, `SmsContentForm`, `VcardContentForm` (Phase 7).
@@ -165,7 +165,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - Phase 2: section "Shape"; labels "Dots", "Eye frame", "Eye center"; dot options "Rounded", "Dots", "Classy", "Classy rounded", "Square", "Extra rounded"; eye frame options "Rounded", "Square", "Circle"; eye center options "Dot", "Square".
 - Phase 3: section "Background"; "Background color", "Transparent background", "Margin"; hint "Leave some margin so scanners can find the code."; "JPEG can't be transparent. Pick PNG, WebP or SVG."
 - Phase 4: "Low contrast. Some phones may not scan this code.", "Light dots on a dark background don't scan on every phone. Make the dots darker than the background."
-- Phase 5: "Solid", "Gradient", "Linear", "Radial", "Start color", "End color", "Angle".
+- Phase 5: "Solid", "Gradient", "Gradient type", "Linear", "Radial", "Start color", "End color", "Angle".
 - Phase 6: "Logo size", "Logo margin", "Hide dots behind the logo".
 - Phase 7: tabs "Link or text", "WiFi", "Email", "Phone", "SMS", "Contact"; WiFi: "Network name", "Password", "Security", "Hidden network"; Email: "To", "Subject", "Message"; Phone/SMS: "Phone number", "Message"; Contact: "First name", "Last name", "Phone", "Email", "Company", "Website"; errors "Add a network name.", "Add an email address.", "Add a phone number.", "Add at least a name."
 - Phase 8: section "Presets"; names "Classic", "Soft", "Dotted", "Ocean", "Sunset".
@@ -227,13 +227,13 @@ Warn users when their colors may stop the code from scanning.
 
 Allow linear and radial gradients on dots, eye frames, eye centers and background.
 
-- [ ] Add the gradient variant to `QrFill` and map it in `toQrCodeOptions` (two color stops at 0 and 1, rotation in degrees converted to radians).
-- [ ] Create `FillField`: "Solid" / "Gradient" toggle (`OptionPicker`), one color for solid, start/end colors plus "Linear"/"Radial" and an "Angle" `RangeField` (linear only) for gradient.
-- [ ] Replace the `ColorField`s of the Ink and Background sections with `FillField`; replace `set-fill` payload with `QrFill`.
-- [ ] Make `assessScannability` check every gradient color.
-- [ ] Extend `toQrCodeOptions` and `contrast` tests; add "applies a gradient to the dots" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Add the gradient variant to `QrFill` and map it in `toQrCodeOptions` (two color stops at 0 and 1, rotation in degrees converted to radians). _(`gradient` is always sent, `undefined` for solid fills: `update` deep merges options, so a missing key would keep the old gradient. Checked in the browser that switching back to solid clears it from the canvas.)_
+- [x] Create `FillField`: "Solid" / "Gradient" toggle (`OptionPicker`), one color for solid, start/end colors plus "Linear"/"Radial" and an "Angle" `RangeField` (linear only) for gradient. _(Solid mode renders exactly the previous `ColorField`, so existing labels and hints keep working. The gradient fieldset is named "<label> gradient" for screen readers to avoid a clash with the Shape "Dots" group. The kind toggle is named "<label> fill". Switching keeps the first color; the default end is `#3f6212`, and `#ecfccb` for the background. `OptionPicker` gained `labelHidden`.)_
+- [x] Replace the `ColorField`s of the Ink and Background sections with `FillField`; replace `set-fill` payload with `QrFill`. _(`onChangeColor` became `onChangeFill`.)_
+- [x] Make `assessScannability` check every gradient color. _(Every ink color is compared with every background color.)_
+- [x] Extend `toQrCodeOptions` and `contrast` tests; add "applies a gradient to the dots" to `tests/App.test.tsx`. _(95 tests pass. The browser check also confirmed the SVG export contains a `linearGradient`.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 6: Logo controls
 
@@ -326,6 +326,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 5 to allow linear and radial gradients on dots, eyes and background.
+Implement Phase 6 to let users tune the logo size, margin and the dots behind it.
 
-A lighthouse now warns before any code runs aground, thanks to [Codely](https://codely.com) AI tooling. 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+The lighthouse now shines in gradients, thanks to [Codely](https://codely.com) AI tooling. 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

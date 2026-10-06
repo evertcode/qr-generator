@@ -55,6 +55,25 @@ describe('assessScannability', () => {
     expect(assessScannability(design)).toEqual(['low-contrast'])
   })
 
+  it('checks every gradient color of the dots against the background', () => {
+    const design: QrDesign = {
+      ...DEFAULT_QR_DESIGN,
+      dots: { ...DEFAULT_QR_DESIGN.dots, fill: { kind: 'gradient', gradientType: 'linear', rotation: 0, colors: ['#222222', '#dddddd'] } }
+    }
+
+    expect(assessScannability(design)).toEqual(['low-contrast'])
+  })
+
+  it('checks the dots against every background gradient color', () => {
+    const design: QrDesign = {
+      ...DEFAULT_QR_DESIGN,
+      background: { transparent: false, fill: { kind: 'gradient', gradientType: 'linear', rotation: 0, colors: ['#ffffff', '#333333'] } }
+    }
+
+    // #222222 on the #333333 end is still darker, so it is low contrast but not inverted
+    expect(assessScannability(design)).toEqual(['low-contrast'])
+  })
+
   it('reports nothing for a transparent background', () => {
     expect(assessScannability(withColors('#eeeeee', '#ffffff', true))).toEqual([])
   })

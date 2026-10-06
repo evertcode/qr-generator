@@ -1,4 +1,4 @@
-import { QrDesign, ScannabilityIssue } from '../types/design'
+import { QrDesign, QrFill, ScannabilityIssue } from '../types/design'
 import { normalizeHexColor } from './hexColor'
 
 // Scanners need clearly darker dots than background; 4:1 leaves room for print and screen glare
@@ -22,18 +22,21 @@ export function getContrastRatio (a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+const fillColors = (fill: QrFill): string[] => fill.kind === 'solid' ? [fill.color] : fill.colors
+
 export function assessScannability (design: QrDesign): ScannabilityIssue[] {
   if (design.background.transparent) return []
 
-  const background = design.background.fill.color
-  const backgroundLuminance = relativeLuminance(background)
-  const inks = [design.dots, design.cornersSquare, design.cornersDot].map((style) => style.fill.color)
+  // Every ink color is checked against every background color, so gradients are judged at their weakest point
+  const backgrounds = fillColors(design.background.fill)
+  const inks = [design.dots, design.cornersSquare, design.cornersDot].flatMap((style) => fillColors(style.fill))
+  const pairs = inks.flatMap((ink) => backgrounds.map((background) => [ink, background] as const))
   const issues: ScannabilityIssue[] = []
 
-  if (inks.some((ink) => getContrastRatio(ink, background) < MIN_SCANNABLE_CONTRAST)) {
+  if (pairs.some(([ink, background]) => getContrastRatio(ink, background) < MIN_SCANNABLE_CONTRAST)) {
     issues.push('low-contrast')
   }
-  if (inks.some((ink) => relativeLuminance(ink) > backgroundLuminance)) {
+  if (pairs.some(([ink, background]) => relativeLuminance(ink) > relativeLuminance(background))) {
     issues.push('inverted')
   }
 

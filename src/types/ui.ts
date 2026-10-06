@@ -1,6 +1,6 @@
 import { ChangeEvent, ReactNode } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
-import { QrSetShapeAction, QrShapeTarget, QrShapeTypes } from './design'
+import { QrFill, QrSetShapeAction, QrShapeTarget, QrShapeTypes } from './design'
 
 export type InputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => void
 export type ExtensionChangeHandler = (extension: FileExtension) => void
@@ -88,6 +88,7 @@ export interface OptionPickerProps<T extends string> {
   options: readonly OptionPickerItem<T>[]
   onChange: (value: T) => void
   hint?: string
+  labelHidden?: boolean
 }
 
 export type ShapeIconProps = {
@@ -97,6 +98,15 @@ export type ShapeIconProps = {
 export interface ShapePickersProps {
   shapes: QrShapeTypes
   onShapeChange: (change: QrSetShapeAction) => void
+}
+
+export interface FillFieldProps {
+  id: string
+  label: string
+  fill: QrFill
+  onChange: (fill: QrFill) => void
+  hint?: string
+  defaultGradientEnd?: string
 }
 
 export interface SectionProps {

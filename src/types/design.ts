@@ -1,7 +1,12 @@
 import { CornerDotType, CornerSquareType, DotType, ErrorCorrectionLevel } from 'qr-code-styling'
 import { QrSizeDimension } from './qr'
 
-export type QrFill = { kind: 'solid'; color: string }
+export type QrGradientType = 'linear' | 'radial'
+export type QrFillKind = 'solid' | 'gradient'
+
+export type QrFill =
+  | { kind: 'solid'; color: string }
+  | { kind: 'gradient'; gradientType: QrGradientType; rotation: number; colors: [string, string] }
 
 export type QrContent = { type: 'text'; text: string }
 

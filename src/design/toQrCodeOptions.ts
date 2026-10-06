@@ -1,8 +1,30 @@
-import { Options } from 'qr-code-styling'
-import { QrDesign } from '../types/design'
+import { Gradient, Options } from 'qr-code-styling'
+import { QrDesign, QrFill } from '../types/design'
 import { DEFAULT_LOGO_SETTINGS } from './defaultDesign'
 
 const TRANSPARENT = 'rgba(0,0,0,0)'
+
+interface QrColorOptions {
+  color: string
+  gradient: Gradient | undefined
+}
+
+// `gradient` is always sent: `update` merges options, so a missing key would keep an old gradient
+const toColorOptions = (fill: QrFill): QrColorOptions => {
+  if (fill.kind === 'solid') return { color: fill.color, gradient: undefined }
+
+  return {
+    color: fill.colors[0],
+    gradient: {
+      type: fill.gradientType,
+      rotation: (fill.rotation * Math.PI) / 180,
+      colorStops: [
+        { offset: 0, color: fill.colors[0] },
+        { offset: 1, color: fill.colors[1] }
+      ]
+    }
+  }
+}
 
 export function toQrCodeOptions (design: QrDesign): Options {
   const logo = design.logo ?? DEFAULT_LOGO_SETTINGS
@@ -27,18 +49,20 @@ export function toQrCodeOptions (design: QrDesign): Options {
       crossOrigin: 'anonymous'
     },
     dotsOptions: {
-      color: design.dots.fill.color,
+      ...toColorOptions(design.dots.fill),
       type: design.dots.type
     },
     backgroundOptions: {
-      color: design.background.transparent ? TRANSPARENT : design.background.fill.color
+      ...(design.background.transparent
+        ? { color: TRANSPARENT, gradient: undefined }
+        : toColorOptions(design.background.fill))
     },
     cornersSquareOptions: {
-      color: design.cornersSquare.fill.color,
+      ...toColorOptions(design.cornersSquare.fill),
       type: design.cornersSquare.type
     },
     cornersDotOptions: {
-      color: design.cornersDot.fill.color,
+      ...toColorOptions(design.cornersDot.fill),
       type: design.cornersDot.type
     }
   }
