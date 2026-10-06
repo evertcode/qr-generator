@@ -135,6 +135,11 @@ export interface PresetPickerProps {
   onApply: (preset: QrStylePreset) => void
 }
 
+export interface ShareLinkButtonProps {
+  onCopy: () => void
+  logoExcluded: boolean
+}
+
 export interface SectionProps {
   number?: string
   title: string

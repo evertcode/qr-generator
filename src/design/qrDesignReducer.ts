@@ -31,6 +31,8 @@ export function qrDesignReducer (state: QrDesign, action: QrDesignAction): QrDes
     case 'apply-preset':
       // Presets only restyle the code: content, size, logo and error correction stay as they are
       return { ...state, ...action.style }
+    case 'replace':
+      return action.design
     case 'reset':
       return DEFAULT_QR_DESIGN
   }

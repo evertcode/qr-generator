@@ -5,6 +5,7 @@ import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
 import { DESIGN_STORAGE_KEY, serializeQrDesign } from '../src/design/persistence'
 import { DEFAULT_QR_DESIGN } from '../src/design/defaultDesign'
+import { encodeDesignToHash } from '../src/design/shareLink'
 
 const qrDouble = vi.hoisted(() => ({
   update: vi.fn(),
@@ -37,6 +38,7 @@ class FailingFileReader {
 }
 
 afterEach(() => {
+  window.history.replaceState(null, '', '/')
   vi.unstubAllGlobals()
   qrDouble.update.mockClear()
 })
@@ -445,5 +447,62 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Reset design' }))
 
     expect(localStorage.getItem(DESIGN_STORAGE_KEY)).toBeNull()
+  })
+
+  it('loads a design from the link and clears the hash', () => {
+    const linked = { ...DEFAULT_QR_DESIGN, content: { type: 'phone' as const, number: '+34 600 000 000' } }
+    window.history.replaceState(null, '', `/#${encodeDesignToHash(linked)}`)
+
+    render(<App />)
+
+    expect(screen.getByRole('tab', { name: 'Phone' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('textbox', { name: 'Phone number' })).toHaveValue('+34 600 000 000')
+    expect(screen.getByText('Loaded the design from the link.')).toHaveAttribute('role', 'status')
+    expect(window.location.hash).toBe('')
+  })
+
+  it('shows an error and the default design for an invalid link', () => {
+    window.history.replaceState(null, '', '/#design=broken')
+
+    render(<App />)
+
+    expect(screen.getByText('This link has an invalid design. Showing the default one.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('https://github.com/evertcode')
+  })
+
+  it('copies the share link', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+
+    const copied = await navigator.clipboard.readText()
+    expect(copied).toMatch(/#design=[A-Za-z0-9_-]+$/)
+    expect(screen.getByText('Link copied')).toHaveAttribute('role', 'status')
+  })
+
+  it('warns that uploaded logos are left out of links', async () => {
+    const user = setupUser()
+    render(<App />)
+
+    expect(screen.getByRole('button', { name: 'Copy link' })).not.toHaveAccessibleDescription()
+
+    await user.upload(logoInput(), new File(['<svg/>'], 'brand.svg', { type: 'image/svg+xml' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Copy link' })).toHaveAccessibleDescription("Uploaded logos aren't included in links.")
+    })
+  })
+
+  it('loads a link pasted into the open app', async () => {
+    render(<App />)
+    const linked = { ...DEFAULT_QR_DESIGN, content: { type: 'text' as const, text: 'pasted link' } }
+
+    window.history.replaceState(null, '', `/#${encodeDesignToHash(linked)}`)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(await screen.findByText('Loaded the design from the link.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('pasted link')
+    expect(window.location.hash).toBe('')
   })
 })

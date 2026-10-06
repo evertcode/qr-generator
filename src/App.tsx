@@ -10,6 +10,7 @@ import FormatPicker from './components/FormatPicker'
 import ErrorCorrectionPicker from './components/ErrorCorrectionPicker'
 import ShapePickers from './components/ShapePickers'
 import PresetPicker from './components/PresetPicker'
+import ShareLinkButton from './components/ShareLinkButton'
 import RangeField from './components/RangeField'
 import CheckboxField from './components/CheckboxField'
 import Section from './components/Section'
@@ -30,10 +31,12 @@ import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { QR_STYLE_PRESETS } from './design/presets'
-import { clearSavedDesign, getDesignStorage, loadSavedDesign, saveDesign } from './design/persistence'
+import { clearSavedDesign, getDesignStorage, saveDesign } from './design/persistence'
+import { resolveInitialDesign } from './design/initialDesign'
+import { encodeDesignToHash, isUploadedLogo } from './design/shareLink'
 import { LOGO_MARGIN_MAX, LOGO_SIZE_MAX, LOGO_SIZE_MIN, MARGIN_MAX, SIZE_MAX, SIZE_MIN } from './design/limits'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
+import { InitialDesignSource, QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -51,9 +54,19 @@ const STATUS_MESSAGES: Record<AppStatus, string> = {
   failed: "Couldn't copy the image. Try again.",
   'design-reset': 'Design reset',
   'design-restored': 'Restored your last design.',
-  'logo-not-saved': 'Your logo was too big to keep for next time.'
+  'logo-not-saved': 'Your logo was too big to keep for next time.',
+  'link-loaded': 'Loaded the design from the link.',
+  'invalid-link': 'This link has an invalid design. Showing the default one.',
+  'link-copied': 'Link copied',
+  'link-copy-failed': "Couldn't copy the link. Try again."
 }
-const SUCCESS_STATUSES: readonly AppStatus[] = ['copied', 'design-reset', 'design-restored']
+const SUCCESS_STATUSES: readonly AppStatus[] = ['copied', 'design-reset', 'design-restored', 'link-loaded', 'link-copied']
+const INITIAL_STATUSES: Record<InitialDesignSource, AppStatus | undefined> = {
+  link: 'link-loaded',
+  'invalid-link': 'invalid-link',
+  storage: 'design-restored',
+  default: undefined
+}
 const STATUS_DURATION_MS = 4000
 
 const EYE_FRAME_HINT = 'The outer square in each corner.'
@@ -79,10 +92,10 @@ const capacityMessage = (level: ErrorCorrectionLevel) =>
 
 function App () {
   const [storage] = useState(getDesignStorage)
-  const [restoredDesign] = useState(() => storage && loadSavedDesign(storage))
-  const [design, dispatch] = useReducer(qrDesignReducer, restoredDesign ?? DEFAULT_QR_DESIGN)
+  const [initial] = useState(() => resolveInitialDesign(storage, window.location.hash))
+  const [design, dispatch] = useReducer(qrDesignReducer, initial.design)
   const [logoError, setLogoError] = useState<LogoUploadError>()
-  const [status, setStatus] = useState<AppStatus | undefined>(restoredDesign ? 'design-restored' : undefined)
+  const [status, setStatus] = useState<AppStatus | undefined>(INITIAL_STATUSES[initial.source])
   // Warn about an oversized logo once per logo, not on every save
   const warnedLogoSrc = useRef<string>()
   // Remounts the content editor on reset so its per-tab drafts are cleared too
@@ -94,6 +107,24 @@ function App () {
 
   const payload = buildQrPayload(design.content)
   const { errorCorrectionLevel, size, background } = design
+  useEffect(() => {
+    // Once loaded, the link's design lives in the app; keeping the hash would reload it over later edits
+    const clearHash = () => window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    if (initial.source === 'link' || initial.source === 'invalid-link') clearHash()
+
+    // A link pasted into a tab that already runs the app only changes the hash, without a reload
+    const onHashChange = () => {
+      const shared = resolveInitialDesign(null, window.location.hash)
+      if (shared.source === 'default') return
+      dispatch({ type: 'replace', design: shared.design })
+      setStatus(INITIAL_STATUSES[shared.source])
+      setResetCount((count) => count + 1)
+      clearHash()
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [initial.source])
+
   useEffect(() => {
     if (!storage) return
     // The default design is not worth restoring, so a reset leaves storage empty
@@ -179,6 +210,16 @@ function App () {
 
   const onMarginChange = (margin: number) => {
     dispatch({ type: 'set-margin', margin })
+  }
+
+  const onCopyLink = async () => {
+    const url = `${window.location.origin}${window.location.pathname}#${encodeDesignToHash(design)}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setStatus('link-copied')
+    } catch {
+      setStatus('link-copy-failed')
+    }
   }
 
   const onApplyPreset = (preset: QrStylePreset) => {
@@ -426,6 +467,7 @@ function App () {
                   </button>
                 </div>
               </div>
+              <ShareLinkButton onCopy={onCopyLink} logoExcluded={isUploadedLogo(design.logo)} />
               <p role='status' className={`min-h-5 text-sm ${status && SUCCESS_STATUSES.includes(status) ? 'text-moss' : 'text-red-700'}`}>
                 {status && STATUS_MESSAGES[status]}
               </p>

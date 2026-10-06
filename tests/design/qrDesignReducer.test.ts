@@ -94,6 +94,12 @@ describe('qrDesignReducer', () => {
     expect(next.logo).toBe(state.logo)
   })
 
+  it('replaces the whole design', () => {
+    const other: QrDesign = { ...DEFAULT_QR_DESIGN, margin: 24, logo: null }
+
+    expect(apply({ type: 'replace', design: other })).toBe(other)
+  })
+
   it('resets to the default design', () => {
     const edited = apply({ type: 'set-content', content: { type: 'text', text: 'edited' } })
 

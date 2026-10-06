@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T03:07:18Z"
+last_implementation_at: "2026-10-06T03:12:59Z"
 has_completed_all_phases: "false"
 ---
 
@@ -82,7 +82,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `buildQrPayload(content: QrContent): string` and `describeQrContent(content: QrContent): string` in `src/utils/buildQrPayload.ts`, `validateQrContent(content: QrContent): QrContentError | null` in `src/utils/validateQrContent.ts`, `EMPTY_CONTENT: QrContentDrafts` in `src/design/emptyContent.ts` (Phase 7).
 - `QR_STYLE_PRESETS: readonly QrStylePreset[]` in `src/design/presets.ts` (Phase 8).
 - `parseQrDesign(value: unknown): QrDesign | null`, `serializeQrDesign(design: QrDesign): QrDesign`, `saveDesign(storage: Storage, design: QrDesign): SaveDesignResult`, `loadSavedDesign(storage: Storage): QrDesign | null`, `clearSavedDesign(storage: Storage): void` and `getDesignStorage(): Storage | null` in `src/design/persistence.ts` (Phase 9). Stored under the `qr-design:v1` key as `{ version: 1, design }`. Shared limits in `src/design/limits.ts` (Phase 9).
-- `encodeDesignToHash(design: QrDesign): string` and `decodeDesignFromHash(hash: string): QrDesign | null` in `src/design/shareLink.ts` (Phase 10).
+- `encodeDesignToHash(design: QrDesign): string`, `decodeDesignFromHash(hash: string): QrDesign | null`, `hasSharedDesign(hash: string): boolean` and `isUploadedLogo(logo: QrLogo | null): boolean` in `src/design/shareLink.ts`; `resolveInitialDesign(storage: Storage | null, hash: string): InitialDesign` in `src/design/initialDesign.ts`, with `InitialDesign { design; source: 'link' | 'invalid-link' | 'storage' | 'default' }` (Phase 10).
 - `useDesignHistory(initial: QrDesign): DesignHistory` in `src/hooks/useDesignHistory.ts` (Phase 11).
 - `sanitizeFileName(name: string): string` and `exportQr(qrCode: QRCodeStyling, options: QrExportOptions): Promise<void>` in `src/utils/exportQr.ts` (Phase 12).
 - `composeFramedQr(qr: Blob, frame: QrFrame, extension: FileExtension): Promise<Blob>` in `src/utils/composeFramedQr.ts` (Phase 13).
@@ -111,7 +111,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - updates each field without touching the others
   - `reset` returns `DEFAULT_QR_DESIGN`
   - `apply-preset` changes style but keeps content, size, logo and error correction (Phase 8)
-  - `replace` swaps the whole design (Phase 9)
+  - `replace` swaps the whole design (Phase 10, used for links pasted into the open app)
 - `tests/components/OptionPicker.test.tsx` (Phase 2)
   - renders a radio group named by the label
   - checks the selected option
@@ -149,6 +149,10 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - round trips a design through the hash
   - leaves out an uploaded logo and keeps the default logo
   - returns `null` for a malformed hash
+- `tests/design/initialDesign.test.ts` (Phase 10)
+  - prefers a shared link over the saved design
+  - falls back to the default, not the saved design, for a broken link
+  - restores the saved design without a link
 - `tests/hooks/useDesignHistory.test.ts` (Phase 11)
   - undo and redo walk the history
   - a new change after undo drops the redo stack
@@ -174,7 +178,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - Phase 7: tabs "Link or text", "WiFi", "Email", "Phone", "SMS", "Contact"; WiFi: "Network name", "Password", "Security", "Hidden network"; Email: "To", "Subject", "Message"; Phone/SMS: "Phone number", "Message"; Contact: "First name", "Last name", "Phone", "Email", "Company", "Website"; errors "Add a network name.", "Add an email address.", "Add a phone number.", "Add at least a name."
 - Phase 8: section "Presets"; names "Classic", "Soft", "Dotted", "Ocean", "Sunset".
 - Phase 9: "Restored your last design.", "Your logo was too big to keep for next time."
-- Phase 10: "Copy link", "Link copied", "Uploaded logos aren't included in links.", "This link has an invalid design. Showing the default one."
+- Phase 10: "Copy link", "Link copied", "Couldn't copy the link. Try again.", "Loaded the design from the link.", "Uploaded logos aren't included in links.", "This link has an invalid design. Showing the default one."
 - Phase 11: "Undo", "Redo".
 - Phase 12: "File name", "Export size", "Same as preview".
 - Phase 13: section "Frame"; "Add a frame", "Frame text" (default "Scan me"), "Frame color", "Text color".
@@ -286,12 +290,12 @@ Keep the last design between visits.
 
 Let users share or bookmark a design as a link.
 
-- [ ] Create `src/design/shareLink.ts`: base64url JSON in the URL hash, validated with `parseQrDesign`; uploaded logos are replaced by no logo, the default logo is kept as a flag.
-- [ ] On start, a valid hash takes precedence over the saved design; an invalid one shows the error message and loads the default. Clear the hash after loading.
-- [ ] Add `ShareLinkButton` ("Copy link") in the Save section, with the uploaded logo notice when relevant.
-- [ ] Create `tests/design/shareLink.test.ts`; add "loads a design from the link" and "copies the share link" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/design/shareLink.ts`: base64url JSON in the URL hash, validated with `parseQrDesign`; uploaded logos are replaced by no logo, the default logo is kept as a flag. _(The hash is `design=<base64url>` of a versioned `{ version: 1, design }`, UTF-8 safe. Also `hasSharedDesign` and `isUploadedLogo`. A typical link is under 900 characters.)_
+- [x] On start, a valid hash takes precedence over the saved design; an invalid one shows the error message and loads the default. Clear the hash after loading. _(`resolveInitialDesign` in `src/design/initialDesign.ts` decides between link, invalid link, storage and default. Found in the browser check: pasting a link into a tab that already runs the app only fires `hashchange`, so it was ignored. The app now listens to `hashchange` and loads the link with a new `replace` action. A loaded link shows "Loaded the design from the link.")_
+- [x] Add `ShareLinkButton` ("Copy link") in the Save section, with the uploaded logo notice when relevant. _(A text link under the Save buttons; the notice describes the button. Copy results use the shared status region: "Link copied" or "Couldn't copy the link. Try again.")_
+- [x] Create `tests/design/shareLink.test.ts`; add "loads a design from the link" and "copies the share link" to `tests/App.test.tsx`. _(Also `tests/design/initialDesign.test.ts`, a reducer case for `replace`, and App cases for invalid links, links pasted into the open app and the uploaded logo notice. 178 tests pass. In the browser a copied link reproduces the design pixel for pixel both in a clean new tab and in a tab already showing another design.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 11: Undo and redo
 
@@ -330,6 +334,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 10 to let users share or bookmark a design as a link.
+Implement Phase 11 to let users undo and redo their changes.
 
-The wardrobe now remembers what you wore last time, thanks to [Codely](https://codely.com) AI tooling. 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+And now any outfit can be lent to a friend with a single link, thanks to [Codely](https://codely.com) AI tooling. 🔗 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

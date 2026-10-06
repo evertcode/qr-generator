@@ -68,6 +68,13 @@ export interface QrStylePreset {
   style: QrDesignStyle
 }
 
+export type InitialDesignSource = 'link' | 'invalid-link' | 'storage' | 'default'
+
+export interface InitialDesign {
+  design: QrDesign
+  source: InitialDesignSource
+}
+
 export type SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'
 
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
@@ -97,4 +104,5 @@ export type QrDesignAction =
   | { type: 'update-logo'; settings: Partial<QrLogoSettings> }
   | { type: 'remove-logo' }
   | { type: 'apply-preset'; style: QrDesignStyle }
+  | { type: 'replace'; design: QrDesign }
   | { type: 'reset' }
