@@ -1,15 +1,5 @@
-import { useEffect, useState, ChangeEvent } from 'react'
-import {
-  DrawType,
-  TypeNumber,
-  Mode,
-  ErrorCorrectionLevel,
-  DotType,
-  CornerSquareType,
-  CornerDotType,
-  Options,
-  FileExtension
-} from 'qr-code-styling'
+import { useEffect, useMemo, useReducer, useState, ChangeEvent } from 'react'
+import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 
 import Header from './components/Header'
 import Input from './components/Input'
@@ -25,11 +15,15 @@ import Footer from './components/Footer'
 import { useQrCode } from './hooks/useQrCode'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { focusRing } from './styles/focusRing'
+import { textAction } from './styles/textAction'
 import { validateLogoFile } from './utils/validateLogoFile'
 import { exceedsQrCapacity } from './utils/qrCapacity'
 import { copyQrToClipboard } from './utils/copyQrToClipboard'
-import { CopyResult, LogoUploadError, QrColorTarget, QrSizeDimension } from './types/qr'
-import defaultLogo from '../assets/logo.svg'
+import { qrDesignReducer } from './design/qrDesignReducer'
+import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
+import { toQrCodeOptions } from './design/toQrCodeOptions'
+import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
+import { QrFillTarget } from './types/design'
 
 import './App.css'
 
@@ -43,12 +37,14 @@ const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
   unreadable: "We couldn't read that file. Try another one."
 }
 
-const COPY_MESSAGES: Record<CopyResult, string> = {
+const STATUS_MESSAGES: Record<AppStatus, string> = {
   copied: 'Copied to clipboard',
   unsupported: "Your browser can't copy images. Download it instead.",
-  failed: "Couldn't copy the image. Try again."
+  failed: "Couldn't copy the image. Try again.",
+  'design-reset': 'Design reset'
 }
-const COPY_STATUS_DURATION_MS = 4000
+const SUCCESS_STATUSES: readonly AppStatus[] = ['copied', 'design-reset']
+const STATUS_DURATION_MS = 4000
 
 const EYE_FRAME_HINT = 'The outer square in each corner.'
 const EYE_CENTER_HINT = 'The dot inside each corner square.'
@@ -61,80 +57,34 @@ const capacityMessage = (level: ErrorCorrectionLevel) =>
   `Too long for a QR code at level ${level}. Shorten it or pick a lower level.`
 
 function App () {
-  const [options, setOptions] = useState<Options>({
-    width: 300,
-    height: 300,
-    type: 'canvas' as DrawType,
-    data: 'https://github.com/evertcode',
-    image: defaultLogo,
-    margin: 0,
-    qrOptions: {
-      typeNumber: 0 as TypeNumber,
-      mode: 'Byte' as Mode,
-      errorCorrectionLevel: 'Q' as ErrorCorrectionLevel
-    },
-    imageOptions: {
-      hideBackgroundDots: true,
-      imageSize: 0.4,
-      margin: 0,
-      crossOrigin: 'anonymous'
-    },
-    dotsOptions: {
-      color: '#222222',
-      type: 'rounded' as DotType
-    },
-    backgroundOptions: {
-      color: '#fff'
-    },
-    cornersSquareOptions: {
-      color: '#222222',
-      type: 'extra-rounded' as CornerSquareType
-    },
-    cornersDotOptions: {
-      color: '#222222',
-      type: 'dot' as CornerDotType
-    }
-  })
-
-  const [imageName, setImageName] = useState<string>('evertcode mascot')
+  const [design, dispatch] = useReducer(qrDesignReducer, DEFAULT_QR_DESIGN)
   const [logoError, setLogoError] = useState<LogoUploadError>()
-  const [copyResult, setCopyResult] = useState<CopyResult>()
+  const [status, setStatus] = useState<AppStatus>()
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
-  const debouncedOptions = useDebouncedValue(options, QR_UPDATE_DELAY_MS)
-  const { containerRef, qrCode } = useQrCode(debouncedOptions)
+  const debouncedDesign = useDebouncedValue(design, QR_UPDATE_DELAY_MS)
+  const qrOptions = useMemo(() => toQrCodeOptions(debouncedDesign), [debouncedDesign])
+  const { containerRef, qrCode } = useQrCode(qrOptions)
 
-  const data = options.data ?? ''
-  const errorCorrectionLevel = options.qrOptions?.errorCorrectionLevel ?? 'Q'
+  const data = design.content.text
+  const { errorCorrectionLevel, size } = design
   const isDataEmpty = !data.trim()
   const isDataTooLong = exceedsQrCapacity(data, errorCorrectionLevel)
   const canSave = !isDataEmpty && !isDataTooLong
   const dataError = isDataEmpty
     ? EMPTY_DATA_MESSAGE
     : isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
-  const showLogoHint = Boolean(options.image) && LOW_CORRECTION_LEVELS.includes(errorCorrectionLevel)
+  const showLogoHint = design.logo !== null && LOW_CORRECTION_LEVELS.includes(errorCorrectionLevel)
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setOptions((opts) => ({
-      ...opts,
-      data: event.target.value
-    }))
+    dispatch({ type: 'set-content', content: { type: 'text', text: event.target.value } })
   }
 
   const onChangeSize = (dimension: QrSizeDimension) => (value: number) => {
-    setOptions((opts) => ({
-      ...opts,
-      [dimension]: value
-    }))
+    dispatch({ type: 'set-size', dimension, value })
   }
 
   const onErrorCorrectionLevelChange = (level: ErrorCorrectionLevel) => {
-    setOptions((opts) => ({
-      ...opts,
-      qrOptions: {
-        ...opts.qrOptions,
-        errorCorrectionLevel: level
-      }
-    }))
+    dispatch({ type: 'set-error-correction', level })
   }
 
   const onExtensionChange = (extension: FileExtension) => {
@@ -158,11 +108,7 @@ function App () {
     const reader = new FileReader()
 
     reader.onload = () => {
-      setOptions((opts) => ({
-        ...opts,
-        image: reader.result as string
-      }))
-      setImageName(file.name)
+      dispatch({ type: 'set-logo', src: reader.result as string, name: file.name })
       setLogoError(undefined)
     }
 
@@ -174,22 +120,29 @@ function App () {
   }
 
   const onRemoveImage = () => {
-    setOptions((opts) => ({
-      ...opts,
-      image: ''
-    }))
+    dispatch({ type: 'remove-logo' })
     setLogoError(undefined)
   }
 
+  const onChangeColor = (target: QrFillTarget) => (color: string) => {
+    dispatch({ type: 'set-fill', target, fill: { kind: 'solid', color } })
+  }
+
+  const onReset = () => {
+    dispatch({ type: 'reset' })
+    setLogoError(undefined)
+    setStatus('design-reset')
+  }
+
   useEffect(() => {
-    if (!copyResult) return
-    const timeout = setTimeout(() => setCopyResult(undefined), COPY_STATUS_DURATION_MS)
+    if (!status) return
+    const timeout = setTimeout(() => setStatus(undefined), STATUS_DURATION_MS)
     return () => clearTimeout(timeout)
-  }, [copyResult])
+  }, [status])
 
   // Flush pending edits so a quick click never exports a stale code
   const flushQrCode = () => {
-    qrCode.update(options)
+    qrCode.update(toQrCodeOptions(design))
   }
 
   const onDownload = () => {
@@ -203,18 +156,7 @@ function App () {
   const onCopy = async () => {
     if (!canSave) return
     flushQrCode()
-    setCopyResult(await copyQrToClipboard(qrCode))
-  }
-
-  const onChangeColor = (target: QrColorTarget) => (color: string) => {
-    const key = `${target}Options` as const
-    setOptions((opts) => ({
-      ...opts,
-      [key]: {
-        ...opts[key],
-        color
-      }
-    }))
+    setStatus(await copyQrToClipboard(qrCode))
   }
 
   return (
@@ -226,9 +168,14 @@ function App () {
             aria-label='QR code preview'
             className='py-8 lg:pr-10 lg:sticky lg:top-0'
           >
-            <QrLabel content={data} width={options.width ?? 300} height={options.height ?? 300}>
+            <QrLabel content={data} width={size.width} height={size.height}>
               <div className='qr-preview' ref={containerRef} />
             </QrLabel>
+            <div className='mt-3 flex justify-end'>
+              <button type='button' onClick={onReset} className={`${textAction} text-muted hover:text-ink`}>
+                Reset design
+              </button>
+            </div>
           </section>
 
           <div className='py-8 space-y-8 border-t border-rule lg:border-t-0 lg:border-l lg:pl-10'>
@@ -237,7 +184,7 @@ function App () {
                 id='qr-data'
                 label='Link or text'
                 placeholder='https://your-site.com'
-                value={options.data}
+                value={data}
                 onChange={onDataChange}
                 error={dataError}
               />
@@ -248,7 +195,7 @@ function App () {
                 <SizeField
                   id='qr-width'
                   label='Width'
-                  value={options.width ?? 300}
+                  value={size.width}
                   min={SIZE_MIN}
                   max={SIZE_MAX}
                   onChange={onChangeSize('width')}
@@ -256,7 +203,7 @@ function App () {
                 <SizeField
                   id='qr-height'
                   label='Height'
-                  value={options.height ?? 300}
+                  value={size.height}
                   min={SIZE_MIN}
                   max={SIZE_MAX}
                   onChange={onChangeSize('height')}
@@ -265,7 +212,7 @@ function App () {
               <p className='flex justify-between font-mono text-xs text-muted'>
                 <span>{SIZE_MIN}–{SIZE_MAX} px each side</span>
                 <output htmlFor='qr-width qr-height' className='text-ink'>
-                  {options.width ?? 300} × {options.height ?? 300} px
+                  {size.width} × {size.height} px
                 </output>
               </p>
             </Section>
@@ -274,21 +221,21 @@ function App () {
               <ColorField
                 id='qr-dots-color'
                 label='Dots'
-                color={options.dotsOptions?.color ?? '#222222'}
+                color={design.dots.fill.color}
                 onChange={onChangeColor('dots')}
               />
               <ColorField
                 id='qr-square-color'
                 label='Eye frame'
                 hint={EYE_FRAME_HINT}
-                color={options.cornersSquareOptions?.color ?? '#222222'}
+                color={design.cornersSquare.fill.color}
                 onChange={onChangeColor('cornersSquare')}
               />
               <ColorField
                 id='qr-corner-color'
                 label='Eye center'
                 hint={EYE_CENTER_HINT}
-                color={options.cornersDotOptions?.color ?? '#222222'}
+                color={design.cornersDot.fill.color}
                 onChange={onChangeColor('cornersDot')}
               />
             </Section>
@@ -297,8 +244,8 @@ function App () {
               <InputFile
                 id='qr-logo'
                 label='Add a logo'
-                image={options.image}
-                imageName={imageName}
+                image={design.logo?.src}
+                imageName={design.logo?.name ?? ''}
                 onChangeImage={onChangeImage}
                 onRemoveImage={onRemoveImage}
                 error={logoError && LOGO_ERROR_MESSAGES[logoError]}
@@ -340,8 +287,8 @@ function App () {
                   </button>
                 </div>
               </div>
-              <p role='status' className={`min-h-5 text-sm ${copyResult === 'copied' ? 'text-moss' : 'text-red-700'}`}>
-                {copyResult && COPY_MESSAGES[copyResult]}
+              <p role='status' className={`min-h-5 text-sm ${status && SUCCESS_STATUSES.includes(status) ? 'text-moss' : 'text-red-700'}`}>
+                {status && STATUS_MESSAGES[status]}
               </p>
             </Section>
           </div>

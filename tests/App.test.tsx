@@ -186,4 +186,22 @@ describe('App', () => {
     expect(screen.getByLabelText('Eye frame')).toHaveAccessibleDescription('The outer square in each corner.')
     expect(screen.getByLabelText('Eye center')).toHaveAccessibleDescription('The dot inside each corner square.')
   })
+
+  it('resets the design to the defaults', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByLabelText('Link or text')
+    await user.clear(field)
+    await user.type(field, 'edited')
+    await user.click(screen.getByRole('radio', { name: 'H' }))
+    await user.click(screen.getByRole('button', { name: 'remove' }))
+
+    await user.click(screen.getByRole('button', { name: 'Reset design' }))
+
+    expect(field).toHaveValue('https://github.com/evertcode')
+    expect(screen.getByRole('radio', { name: 'Q' })).toBeChecked()
+    expect(screen.getByText('evertcode mascot')).toBeInTheDocument()
+    expect(screen.getByText('Design reset')).toHaveAttribute('role', 'status')
+  })
 })

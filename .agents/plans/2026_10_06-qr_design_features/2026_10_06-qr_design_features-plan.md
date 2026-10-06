@@ -9,6 +9,16 @@ created_by:
     name: "Claude Opus"
     version: "5.5"
     reasoning_effort: "low"
+
+implemented_by:
+  tool: "Claude Code"
+  model:
+    name: "Claude Opus"
+    version: "5.5"
+    reasoning_effort: "low"
+
+last_implementation_at: "2026-10-06T02:31:49Z"
+has_completed_all_phases: "false"
 ---
 
 # QR design features
@@ -94,7 +104,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
   - maps a gradient fill to `gradient` with two `colorStops` and rotation in radians (Phase 5)
   - maps a transparent background to `rgba(0,0,0,0)` (Phase 3)
   - maps logo size, margin and hideBackgroundDots to `imageOptions` (Phase 6)
-  - omits `image` when there is no logo
+  - sends an empty `image` when there is no logo, so a removed logo is cleared
   - encodes `content` through `buildQrPayload` (Phase 7)
 - `tests/design/qrDesignReducer.test.ts`
   - updates each field without touching the others
@@ -170,14 +180,14 @@ Cover what users expect from an app to generate and design QR codes: full visual
 
 Move the app state from the library `Options` to our own `QrDesign` model, with no visual change, and give users a "Reset design" button. Every later phase builds on this model.
 
-- [ ] Create `src/types/design.ts` with `QrFill` (solid only), `QrDesign`, `QrLogo`, `QrContent` (text only) and `QrDesignAction`.
-- [ ] Create `src/design/defaultDesign.ts` with `DEFAULT_QR_DESIGN` matching the current defaults (including the default logo and its name).
-- [ ] Create `src/design/toQrCodeOptions.ts` and `src/design/qrDesignReducer.ts`.
-- [ ] Replace `options` and `imageName` state in `App` with `useReducer(qrDesignReducer, DEFAULT_QR_DESIGN)`, deriving `Options` with `toQrCodeOptions` for `useQrCode`, the capacity check and exports. Remove `QrColorTarget`/`QrColorOptionKey` if no longer used.
-- [ ] Add a "Reset design" text button near the preview that dispatches `reset` and announces "Design reset" in the existing status region.
-- [ ] Create `tests/design/toQrCodeOptions.test.ts` and `tests/design/qrDesignReducer.test.ts` (Phase 1 cases); add "resets the design to the defaults" to `tests/App.test.tsx`. All existing tests must keep passing unchanged.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/types/design.ts` with `QrFill` (solid only), `QrDesign`, `QrLogo`, `QrContent` (text only) and `QrDesignAction`. _(Also `QrSize`, a generic `QrShapeStyle<T>` for dots and corners, and `QrFillTarget`. Phase 1 actions: `set-content`, `set-size`, `set-error-correction`, `set-fill`, `set-logo` (`src`, `name`), `remove-logo`, `reset`.)_
+- [x] Create `src/design/defaultDesign.ts` with `DEFAULT_QR_DESIGN` matching the current defaults (including the default logo and its name). _(Also exports `DEFAULT_LOGO_SETTINGS`, used when a logo is added after removing the previous one.)_
+- [x] Create `src/design/toQrCodeOptions.ts` and `src/design/qrDesignReducer.ts`. _(`toQrCodeOptions` always sends `image`, empty when there is no logo: `qr-code-styling` deep merges `update` options, so a missing key would keep a removed logo on screen.)_
+- [x] Replace `options` and `imageName` state in `App` with `useReducer(qrDesignReducer, DEFAULT_QR_DESIGN)`, deriving `Options` with `toQrCodeOptions` for `useQrCode`, the capacity check and exports. Remove `QrColorTarget`/`QrColorOptionKey` if no longer used. _(Removed. The design is debounced and mapped with `useMemo`, so `useQrCode` only updates when the debounced design changes.)_
+- [x] Add a "Reset design" text button near the preview that dispatches `reset` and announces "Design reset" in the existing status region. _(`CopyResult` state became `AppStatus = CopyResult | 'design-reset'`. The `textAction` link style moved from `InputFile` to `src/styles/textAction.ts` to share it.)_
+- [x] Create `tests/design/toQrCodeOptions.test.ts` and `tests/design/qrDesignReducer.test.ts` (Phase 1 cases); add "resets the design to the defaults" to `tests/App.test.tsx`. All existing tests must keep passing unchanged. _(The 51 previous tests passed untouched; 63 in total. The "omits `image`" case became "sends an empty image when there is no logo". Checked in the browser that removing the logo clears it from the canvas and reset brings it back.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 2: Shapes
 
@@ -315,6 +325,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 1 to move the app state to the `QrDesign` model and add the "Reset design" button.
+Implement Phase 2 to let users pick the shape of the dots, eye frames and eye centers.
 
-From plain codes to designed ones, one slice at a time, with 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot).
+A solid model laid as the first brick of the design studio, with [Codely](https://codely.com) AI tooling. 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
