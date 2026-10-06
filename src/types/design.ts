@@ -68,6 +68,8 @@ export interface QrStylePreset {
   style: QrDesignStyle
 }
 
+export type SaveDesignResult = 'saved' | 'saved-without-logo' | 'failed'
+
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
 export type ScannabilityIssue = 'low-contrast' | 'inverted'
 

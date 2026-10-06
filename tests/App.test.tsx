@@ -3,6 +3,8 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { LOGO_MAX_BYTES } from '../src/utils/validateLogoFile'
+import { DESIGN_STORAGE_KEY, serializeQrDesign } from '../src/design/persistence'
+import { DEFAULT_QR_DESIGN } from '../src/design/defaultDesign'
 
 const qrDouble = vi.hoisted(() => ({
   update: vi.fn(),
@@ -415,5 +417,33 @@ describe('App', () => {
         dotsOptions: expect.objectContaining({ type: 'dots', color: '#1e293b' })
       }))
     })
+  })
+
+  it('restores the saved design', () => {
+    const saved = { ...DEFAULT_QR_DESIGN, content: { type: 'text' as const, text: 'saved link' }, margin: 8 }
+    localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify({ version: 1, design: serializeQrDesign(saved) }))
+
+    render(<App />)
+
+    expect(screen.getByRole('textbox', { name: 'Link or text' })).toHaveValue('saved link')
+    expect(screen.getByRole('spinbutton', { name: 'Margin' })).toHaveValue(8)
+    expect(screen.getByText('Restored your last design.')).toHaveAttribute('role', 'status')
+  })
+
+  it('saves edits and clears the saved design on reset', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const field = screen.getByRole('textbox', { name: 'Link or text' })
+    await user.clear(field)
+    await user.type(field, 'keep me')
+
+    await waitFor(() => {
+      expect(localStorage.getItem(DESIGN_STORAGE_KEY)).toContain('keep me')
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Reset design' }))
+
+    expect(localStorage.getItem(DESIGN_STORAGE_KEY)).toBeNull()
   })
 })

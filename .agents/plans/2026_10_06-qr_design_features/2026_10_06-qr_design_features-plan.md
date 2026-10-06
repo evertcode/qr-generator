@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T03:02:19Z"
+last_implementation_at: "2026-10-06T03:07:18Z"
 has_completed_all_phases: "false"
 ---
 
@@ -81,7 +81,7 @@ Cover what users expect from an app to generate and design QR codes: full visual
 - `getContrastRatio(a: string, b: string): number` and `assessScannability(design: QrDesign): ScannabilityIssue[]` in `src/utils/contrast.ts` (Phase 4).
 - `buildQrPayload(content: QrContent): string` and `describeQrContent(content: QrContent): string` in `src/utils/buildQrPayload.ts`, `validateQrContent(content: QrContent): QrContentError | null` in `src/utils/validateQrContent.ts`, `EMPTY_CONTENT: QrContentDrafts` in `src/design/emptyContent.ts` (Phase 7).
 - `QR_STYLE_PRESETS: readonly QrStylePreset[]` in `src/design/presets.ts` (Phase 8).
-- `parseQrDesign(value: unknown): QrDesign | null`, `saveDesign(storage: Storage, design: QrDesign): SaveDesignResult`, `loadSavedDesign(storage: Storage): QrDesign | null` in `src/design/persistence.ts` (Phase 9). Stored under the `qr-design:v1` key as `{ version: 1, design }`.
+- `parseQrDesign(value: unknown): QrDesign | null`, `serializeQrDesign(design: QrDesign): QrDesign`, `saveDesign(storage: Storage, design: QrDesign): SaveDesignResult`, `loadSavedDesign(storage: Storage): QrDesign | null`, `clearSavedDesign(storage: Storage): void` and `getDesignStorage(): Storage | null` in `src/design/persistence.ts` (Phase 9). Stored under the `qr-design:v1` key as `{ version: 1, design }`. Shared limits in `src/design/limits.ts` (Phase 9).
 - `encodeDesignToHash(design: QrDesign): string` and `decodeDesignFromHash(hash: string): QrDesign | null` in `src/design/shareLink.ts` (Phase 10).
 - `useDesignHistory(initial: QrDesign): DesignHistory` in `src/hooks/useDesignHistory.ts` (Phase 11).
 - `sanitizeFileName(name: string): string` and `exportQr(qrCode: QRCodeStyling, options: QrExportOptions): Promise<void>` in `src/utils/exportQr.ts` (Phase 12).
@@ -275,12 +275,12 @@ Offer ready-made looks that users can apply in one click and then tweak.
 
 Keep the last design between visits.
 
-- [ ] Create `src/design/persistence.ts` with a strict `parseQrDesign` validator (types, enums, hex colors, ranges) and the versioned `qr-design:v1` storage format.
-- [ ] Load the saved design on start (falling back to the default) and save on changes, debounced; on a quota error retry without the logo and show "Your logo was too big to keep for next time."
-- [ ] Show "Restored your last design." once when a saved design is loaded. "Reset design" also clears the saved design.
-- [ ] Create `tests/design/persistence.test.ts`; add "restores the saved design" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/design/persistence.ts` with a strict `parseQrDesign` validator (types, enums, hex colors, ranges) and the versioned `qr-design:v1` storage format. _(The parser rebuilds the design from known fields only, normalizes colors and only accepts base64 image data URLs as logos, never remote URLs. The bundled logo is stored as a `"default"` marker because its URL changes between builds (`serializeQrDesign`). Limits moved to `src/design/limits.ts`, shared with the controls. Also `clearSavedDesign` and `getDesignStorage`, which returns `null` when the browser blocks storage.)_
+- [x] Load the saved design on start (falling back to the default) and save on changes, debounced; on a quota error retry without the logo and show "Your logo was too big to keep for next time." _(Saves reuse the 150 ms debounced design. The logo warning shows once per logo.)_
+- [x] Show "Restored your last design." once when a saved design is loaded. "Reset design" also clears the saved design. _(Saving the default design clears storage instead, so a reset is never "restored" on the next visit. `AppStatus` gained `design-restored` and `logo-not-saved`.)_
+- [x] Create `tests/design/persistence.test.ts`; add "restores the saved design" to `tests/App.test.tsx`. _(Also "saves edits and clears the saved design on reset". `tests/setup.ts` clears `localStorage` after each test, since the app now autosaves. 156 tests pass. In the browser: an edited WiFi + Ocean design, an uploaded PNG and an uploaded SVG logo all survive a reload, and reset leaves storage empty.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 10: Share link
 
@@ -330,6 +330,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 9 to keep the last design between visits.
+Implement Phase 10 to let users share or bookmark a design as a link.
 
-Five ready-made outfits now hang in the wardrobe, thanks to [Codely](https://codely.com) AI tooling. 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+The wardrobe now remembers what you wore last time, thanks to [Codely](https://codely.com) AI tooling. 💾 🎨 📇 🖼️ 🌈 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

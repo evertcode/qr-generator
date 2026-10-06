@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState, ChangeEvent } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState, ChangeEvent } from 'react'
 import { ErrorCorrectionLevel, FileExtension } from 'qr-code-styling'
 
 import Header from './components/Header'
@@ -30,17 +30,13 @@ import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { QR_STYLE_PRESETS } from './design/presets'
+import { clearSavedDesign, getDesignStorage, loadSavedDesign, saveDesign } from './design/persistence'
+import { LOGO_MARGIN_MAX, LOGO_SIZE_MAX, LOGO_SIZE_MIN, MARGIN_MAX, SIZE_MAX, SIZE_MIN } from './design/limits'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
 import { QrContent, QrFill, QrFillTarget, QrLogoSettings, QrStylePreset, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
-const SIZE_MIN = 100
-const SIZE_MAX = 1000
-const MARGIN_MAX = 50
-const LOGO_SIZE_MIN_PERCENT = 10
-const LOGO_SIZE_MAX_PERCENT = 50
-const LOGO_MARGIN_MAX = 20
 const QR_UPDATE_DELAY_MS = 150
 
 const LOGO_ERROR_MESSAGES: Record<LogoUploadError, string> = {
@@ -53,9 +49,11 @@ const STATUS_MESSAGES: Record<AppStatus, string> = {
   copied: 'Copied to clipboard',
   unsupported: "Your browser can't copy images. Download it instead.",
   failed: "Couldn't copy the image. Try again.",
-  'design-reset': 'Design reset'
+  'design-reset': 'Design reset',
+  'design-restored': 'Restored your last design.',
+  'logo-not-saved': 'Your logo was too big to keep for next time.'
 }
-const SUCCESS_STATUSES: readonly AppStatus[] = ['copied', 'design-reset']
+const SUCCESS_STATUSES: readonly AppStatus[] = ['copied', 'design-reset', 'design-restored']
 const STATUS_DURATION_MS = 4000
 
 const EYE_FRAME_HINT = 'The outer square in each corner.'
@@ -80,9 +78,13 @@ const capacityMessage = (level: ErrorCorrectionLevel) =>
   `Too long for a QR code at level ${level}. Shorten it or pick a lower level.`
 
 function App () {
-  const [design, dispatch] = useReducer(qrDesignReducer, DEFAULT_QR_DESIGN)
+  const [storage] = useState(getDesignStorage)
+  const [restoredDesign] = useState(() => storage && loadSavedDesign(storage))
+  const [design, dispatch] = useReducer(qrDesignReducer, restoredDesign ?? DEFAULT_QR_DESIGN)
   const [logoError, setLogoError] = useState<LogoUploadError>()
-  const [status, setStatus] = useState<AppStatus>()
+  const [status, setStatus] = useState<AppStatus | undefined>(restoredDesign ? 'design-restored' : undefined)
+  // Warn about an oversized logo once per logo, not on every save
+  const warnedLogoSrc = useRef<string>()
   // Remounts the content editor on reset so its per-tab drafts are cleared too
   const [resetCount, setResetCount] = useState(0)
   const [fileExtension, setFileExtension] = useState<FileExtension>('svg')
@@ -92,6 +94,21 @@ function App () {
 
   const payload = buildQrPayload(design.content)
   const { errorCorrectionLevel, size, background } = design
+  useEffect(() => {
+    if (!storage) return
+    // The default design is not worth restoring, so a reset leaves storage empty
+    if (debouncedDesign === DEFAULT_QR_DESIGN) {
+      clearSavedDesign(storage)
+      return
+    }
+    const result = saveDesign(storage, debouncedDesign)
+    const logoSrc = debouncedDesign.logo?.src
+    if (result === 'saved-without-logo' && logoSrc !== warnedLogoSrc.current) {
+      warnedLogoSrc.current = logoSrc
+      setStatus('logo-not-saved')
+    }
+  }, [storage, debouncedDesign])
+
   const isDataTooLong = exceedsQrCapacity(payload, errorCorrectionLevel)
   const canSave = validateQrContent(design.content) === null && !isDataTooLong
   const capacityError = isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
@@ -170,6 +187,7 @@ function App () {
 
   const onReset = () => {
     dispatch({ type: 'reset' })
+    if (storage) clearSavedDesign(storage)
     setResetCount((count) => count + 1)
     setLogoError(undefined)
     setStatus('design-reset')
@@ -344,8 +362,8 @@ function App () {
                       id='qr-logo-size'
                       label='Logo size'
                       value={Math.round(design.logo.size * 100)}
-                      min={LOGO_SIZE_MIN_PERCENT}
-                      max={LOGO_SIZE_MAX_PERCENT}
+                      min={LOGO_SIZE_MIN * 100}
+                      max={LOGO_SIZE_MAX * 100}
                       step={5}
                       unit='%'
                       onChange={(percent) => onLogoSettingsChange({ size: percent / 100 })}
