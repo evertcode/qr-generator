@@ -1,0 +1,61 @@
+import { describe, expect, it } from 'vitest'
+import { assessScannability, getContrastRatio } from '../../src/utils/contrast'
+import { DEFAULT_QR_DESIGN } from '../../src/design/defaultDesign'
+import { QrDesign } from '../../src/types/design'
+
+// Paints dots and eyes with the same ink
+const withColors = (ink: string, background: string, transparent = false): QrDesign => ({
+  ...DEFAULT_QR_DESIGN,
+  dots: { ...DEFAULT_QR_DESIGN.dots, fill: { kind: 'solid', color: ink } },
+  cornersSquare: { ...DEFAULT_QR_DESIGN.cornersSquare, fill: { kind: 'solid', color: ink } },
+  cornersDot: { ...DEFAULT_QR_DESIGN.cornersDot, fill: { kind: 'solid', color: ink } },
+  background: { transparent, fill: { kind: 'solid', color: background } }
+})
+
+describe('getContrastRatio', () => {
+  it('returns 21 for black on white', () => {
+    expect(getContrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 5)
+  })
+
+  it('returns 1 for equal colors', () => {
+    expect(getContrastRatio('#84cc16', '#84cc16')).toBe(1)
+  })
+
+  it('is symmetric', () => {
+    expect(getContrastRatio('#3f6212', '#f5f0e6')).toBe(getContrastRatio('#f5f0e6', '#3f6212'))
+  })
+
+  it('accepts shorthand colors', () => {
+    expect(getContrastRatio('#000', '#fff')).toBeCloseTo(21, 5)
+  })
+})
+
+describe('assessScannability', () => {
+  it('reports nothing for the default design', () => {
+    expect(assessScannability(DEFAULT_QR_DESIGN)).toEqual([])
+  })
+
+  it('reports low-contrast below 4:1', () => {
+    // #949494 on white is about 3:1
+    expect(assessScannability(withColors('#949494', '#ffffff'))).toEqual(['low-contrast'])
+  })
+
+  it('accepts a contrast of at least 4:1', () => {
+    // #767676 on white is about 4.5:1
+    expect(assessScannability(withColors('#767676', '#ffffff'))).toEqual([])
+  })
+
+  it('reports inverted when the dots are lighter than the background', () => {
+    expect(assessScannability(withColors('#ffffff', '#222222'))).toEqual(['inverted'])
+  })
+
+  it('checks the eye colors too', () => {
+    const design = { ...DEFAULT_QR_DESIGN, cornersDot: { ...DEFAULT_QR_DESIGN.cornersDot, fill: { kind: 'solid', color: '#eeeeee' } } } as QrDesign
+
+    expect(assessScannability(design)).toEqual(['low-contrast'])
+  })
+
+  it('reports nothing for a transparent background', () => {
+    expect(assessScannability(withColors('#eeeeee', '#ffffff', true))).toEqual([])
+  })
+})

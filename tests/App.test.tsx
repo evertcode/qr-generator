@@ -254,4 +254,32 @@ describe('App', () => {
       expect(qrDouble.update).toHaveBeenLastCalledWith(expect.objectContaining({ margin: 16 }))
     })
   })
+
+  it('warns about low contrast', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const message = 'Low contrast. Some phones may not scan this code.'
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
+
+    const dots = screen.getByRole('textbox', { name: 'Dots' })
+    await user.clear(dots)
+    await user.type(dots, '#cccccc')
+
+    expect(screen.getByText(message).closest('[aria-live]')).toHaveAttribute('aria-live', 'polite')
+  })
+
+  it('warns about inverted colors', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    for (const [name, color] of [['Dots', '#ffffff'], ['Eye frame', '#ffffff'], ['Eye center', '#ffffff'], ['Background color', '#222222']]) {
+      const field = screen.getByRole('textbox', { name })
+      await user.clear(field)
+      await user.type(field, color)
+    }
+
+    expect(screen.getByText(/light dots on a dark background/i)).toBeInTheDocument()
+    expect(screen.queryByText(/low contrast/i)).not.toBeInTheDocument()
+  })
 })

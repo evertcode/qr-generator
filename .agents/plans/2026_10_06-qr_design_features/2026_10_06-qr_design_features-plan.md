@@ -17,7 +17,7 @@ implemented_by:
     version: "5.5"
     reasoning_effort: "low"
 
-last_implementation_at: "2026-10-06T02:42:16Z"
+last_implementation_at: "2026-10-06T02:45:12Z"
 has_completed_all_phases: "false"
 ---
 
@@ -217,11 +217,11 @@ Expose the background color, a transparent background and the quiet zone margin.
 
 Warn users when their colors may stop the code from scanning.
 
-- [ ] Create `src/utils/contrast.ts` with `getContrastRatio` (WCAG relative luminance) and `assessScannability`, comparing dots, eye frame and eye center colors with the background (skipped when transparent). Threshold 4:1.
-- [ ] Show the warnings under the preview in a polite live region, one message per issue.
-- [ ] Create `tests/utils/contrast.test.ts`; add "warns about low contrast" and "warns about inverted colors" to `tests/App.test.tsx`.
-- [ ] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
-- [ ] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
+- [x] Create `src/utils/contrast.ts` with `getContrastRatio` (WCAG relative luminance) and `assessScannability`, comparing dots, eye frame and eye center colors with the background (skipped when transparent). Threshold 4:1. _(`ScannabilityIssue` lives in `src/types/design.ts`. Both issues can show together, e.g. light dots that are also close to the background.)_
+- [x] Show the warnings under the preview in a polite live region, one message per issue. _(Placed between the preview label and the "Reset design" link, with a ⚠ marker.)_
+- [x] Create `tests/utils/contrast.test.ts`; add "warns about low contrast" and "warns about inverted colors" to `tests/App.test.tsx`. _(Extra cases: default design has no issues, shorthand colors, 4.5:1 is accepted, eye colors are checked. 89 tests pass. Checked in the browser.)_
+- [x] Verify the changes in terms of typechecking, linting and tests using `npm run lint && npm run type-check && npm test`. Fix issues if any.
+- [x] STOP. Present the changes to the user for review and suggest commit messages. Do NOT proceed to the next phase until the user explicitly asks.
 
 ### Phase 5: Gradients
 
@@ -326,6 +326,6 @@ Add an optional frame with a short text like "Scan me", included in every export
 
 ## ⏭️ Next step
 
-Implement Phase 4 to warn users when their colors may stop the code from scanning.
+Implement Phase 5 to allow linear and radial gradients on dots, eyes and background.
 
-Shaped bricks now float on any background, thanks to [Codely](https://codely.com) AI tooling. 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)
+A lighthouse now warns before any code runs aground, thanks to [Codely](https://codely.com) AI tooling. 🔦 🏁 🔷 🧱 < 🐢 💨 (Turbotuga™, [Codely](https://codely.com)’s mascot)

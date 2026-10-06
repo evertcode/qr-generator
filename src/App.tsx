@@ -22,11 +22,12 @@ import { textAction } from './styles/textAction'
 import { validateLogoFile } from './utils/validateLogoFile'
 import { exceedsQrCapacity } from './utils/qrCapacity'
 import { copyQrToClipboard } from './utils/copyQrToClipboard'
+import { assessScannability } from './utils/contrast'
 import { qrDesignReducer } from './design/qrDesignReducer'
 import { DEFAULT_QR_DESIGN } from './design/defaultDesign'
 import { toQrCodeOptions } from './design/toQrCodeOptions'
 import { AppStatus, LogoUploadError, QrSizeDimension } from './types/qr'
-import { QrFillTarget } from './types/design'
+import { QrFillTarget, ScannabilityIssue } from './types/design'
 
 import './App.css'
 
@@ -58,6 +59,11 @@ const JPEG_TRANSPARENCY_HINT = "JPEG can't be transparent. Pick PNG, WebP or SVG
 const NO_DISABLED_EXTENSIONS: readonly FileExtension[] = []
 const TRANSPARENT_DISABLED_EXTENSIONS: readonly FileExtension[] = ['jpeg']
 
+const SCANNABILITY_MESSAGES: Record<ScannabilityIssue, string> = {
+  'low-contrast': 'Low contrast. Some phones may not scan this code.',
+  inverted: "Light dots on a dark background don't scan on every phone. Make the dots darker than the background."
+}
+
 const EMPTY_DATA_MESSAGE = 'Nothing to encode yet. Paste a link or type something.'
 const LOGO_SCAN_HINT = 'Logos cover part of the code. Use Q or H so it still scans.'
 const LOW_CORRECTION_LEVELS: readonly ErrorCorrectionLevel[] = ['L', 'M']
@@ -82,6 +88,7 @@ function App () {
   const dataError = isDataEmpty
     ? EMPTY_DATA_MESSAGE
     : isDataTooLong ? capacityMessage(errorCorrectionLevel) : undefined
+  const scannabilityIssues = assessScannability(design)
   const showLogoHint = design.logo !== null && LOW_CORRECTION_LEVELS.includes(errorCorrectionLevel)
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -189,6 +196,14 @@ function App () {
             <QrLabel content={data} width={size.width} height={size.height}>
               <div className={`qr-preview ${background.transparent ? 'qr-preview--transparent' : ''}`} ref={containerRef} />
             </QrLabel>
+            <div aria-live='polite' className='mt-3 space-y-1'>
+              {scannabilityIssues.map((issue) => (
+                <p key={issue} className='flex gap-2 text-sm text-red-700'>
+                  <span aria-hidden='true'>⚠</span>
+                  {SCANNABILITY_MESSAGES[issue]}
+                </p>
+              ))}
+            </div>
             <div className='mt-3 flex justify-end'>
               <button type='button' onClick={onReset} className={`${textAction} text-muted hover:text-ink`}>
                 Reset design

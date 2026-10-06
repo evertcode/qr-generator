@@ -41,6 +41,8 @@ export interface QrDesign {
 }
 
 export type QrShapeTarget = 'dots' | 'cornersSquare' | 'cornersDot'
+export type ScannabilityIssue = 'low-contrast' | 'inverted'
+
 export type QrFillTarget = QrShapeTarget | 'background'
 
 export interface QrShapeTypes {
